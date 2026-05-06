@@ -82,7 +82,7 @@ WUI/JS Environment Lib es parte del proyecto WUI/JS, que consta actualmente de 4
 	Librería de complementos UI.<br><br>
 -	[https://github.com/wui-js/wuijs-environment-lib](https://github.com/wui-js/wuijs-environment-lib)<br>
 	Librería puente entre entornos web y motores de renderizado web nativos.<br><br>
--	[https://github.com/wui-js/wuijs-lab](https://github.com/wui-js/wuijs-lab)<br>
+-	[https://github.com/wui-js/wuijs-demos](https://github.com/wui-js/wuijs-demos)<br>
 	Repositorio con demos y ejemplos de uso de las librerías del proyecto.<br><br>
 
 <a name="dirmap"></a>
@@ -102,12 +102,12 @@ wuijs-environment-lib/
 │   └── wui-js/
 │       └── environment/
 └── src/
-	└── wui-js/
-		└── environment/
-			├── android/
-			├── ios/
-			├── web/
-			└── demo/
+    └── wui-js/
+        └── environment/
+            ├── android/
+            ├── ios/
+            ├── web/
+            └── demo/
 ```
 
 | Ruta                                                                                                                        | Descripción |
@@ -466,10 +466,10 @@ public class MainActivity extends AppCompatActivity {
 			// Cargar página inicial
 
 			// comenta la siguiente línea después de validar la prueba
-            String path = "libraries/wui-js/environment/demo/index.html";
+			String path = "libraries/wui-js/environment/demo/index.html";
 			// descomenta la siguiente línea después de validar la prueba
-            //String path = "file:///android_asset/pages/index.html";
-            wuiEnvironment.openURL("file:///android_asset/" + path);
+			//String path = "file:///android_asset/pages/index.html";
+			wuiEnvironment.openURL("file:///android_asset/" + path);
 
 			// Solicitar permisos básicos
 
@@ -510,16 +510,16 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
 
-        // Requerido por onShowFileChooser() - reenvía el resultado del selector de archivos al puente.
+		// Requerido por onShowFileChooser() - reenvía el resultado del selector de archivos al puente.
 
-        if (wuiEnvironment != null) {
-            wuiEnvironment.handleFileChooserResult(requestCode, resultCode, data);
-        }
-    }
+		if (wuiEnvironment != null) {
+			wuiEnvironment.handleFileChooserResult(requestCode, resultCode, data);
+		}
+	}
 }
 ```
 
