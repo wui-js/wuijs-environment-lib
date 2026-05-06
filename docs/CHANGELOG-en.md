@@ -1,5 +1,11 @@
 # Change Log
 
+## [v0.3.1] - 2026-05-06
+
+Features:
+
+1. Release of the official documentation site for WUI/JS: [https://docs.wuijs.dev](https://docs.wuijs.dev)
+
 ## [v0.3.0] - 2026-04-28
 
 Features:

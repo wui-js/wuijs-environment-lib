@@ -13,13 +13,17 @@
 	<img src="https://github.com/wui-js/wuijs-environment-lib/blob/main/imgs/logo/wuijs-environment-logotype-color.svg" width="220" height="220">
 </div>
 
-**Library version**: `0.3.0` ([Change Log](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-en.md))
-
-**Documentation version**: `0.3.0.20260428.0`
-
-**License**: `Apache License 2.0`
-
-**Author**: `Sergio E. Belmar V. <wuijs.project@gmail.com>`
+|                      | |
+| -------------------- | ----------- |
+| **Library name**     | `wuijs-environment-lib` |
+| **Library version**  | `0.3.1` ([Change Log](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-en.md)) |
+| **NPM package**      | `@wui-js/environment` |
+| **Document version** | `0.3.1.20260506.0` |
+| **License**          | `Apache License 2.0` |
+| **Author**           | `Sergio E. Belmar V. <wuijs.project@gmail.com>` |
+| **Repository**       | [https://github.com/wui-js/wuijs-environment-lib](https://github.com/wui-js/wuijs-environment-lib) |
+| **Documentation**    | [https://docs.wuijs.dev](https://docs.wuijs.dev) |
+| **Website**          | [https://wuijs.dev](https://wuijs.dev) |
 
 ## Table of Contents
 

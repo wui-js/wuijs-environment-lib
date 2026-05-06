@@ -1,5 +1,11 @@
 # Change Log
 
+## [v0.3.1] - 2026-05-06
+
+Características:
+
+1. Liberación del sitio oficial de documentación de WUI/JS: [https://docs.wuijs.dev](https://docs.wuijs.dev)
+
 ## [v0.3.0] - 2026-04-28
 
 Características:
