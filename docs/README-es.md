@@ -1,17 +1,17 @@
 > [!IMPORTANT]
 > La cuenta de GitHub `@wuiproject` se migró a `@wui-js` para que coincidiera con el nombre de la cuenta de NPM.
 
-> [!WARNING]
-> Este documento aún no ha sido terminado y esta en una versión preliminar.
-
-> [!NOTE]
-> For the English version of this document, see [README-en.md](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/README-en.md)
+<p align="right">
+	[English](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/README-en.md) |
+	[Español](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/README-es.md)
+</p>
+---
 
 # wuijs-environment-lib
 
-<div align="center">
+<p align="center">
 	<img src="https://github.com/wui-js/wuijs-environment-lib/blob/main/imgs/logo/wuijs-environment-logotype-color.svg" width="220" height="220">
-</div>
+</p>
 
 |                       | |
 | --------------------- | ----------- |
