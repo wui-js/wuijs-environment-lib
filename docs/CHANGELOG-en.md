@@ -1,3 +1,10 @@
+> [!IMPORTANT]
+> The GitHub account `@wuiproject` was migrated to `@wui-js` to match the name with the NPM account.
+
+[English](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-en.md) |
+[Español](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-es.md)
+---
+
 # Change Log
 
 ## [v0.3.1] - 2026-05-06
