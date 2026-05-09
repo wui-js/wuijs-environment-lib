@@ -15,7 +15,7 @@
 | --------------------- | ----------- |
 | **Nombre librería**   | `wuijs-environment-lib` |
 | **Versión librería**  | `0.3.1` ([Registro de Cambios](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-es.md)) |
-| **Paquete npm**       | `@wui-js/environment` |
+| **Paquete npm**       | `@wui-js/environment` ([npm](https://www.npmjs.com/package/@wui-js/environment)) |
 | **Versión documento** | `0.3.1.20260506.0` |
 | **Licencia**          | `Licencia Apache 2.0` |
 | **Autor**             | `Sergio E. Belmar V. <wuijs.project@gmail.com>` |
