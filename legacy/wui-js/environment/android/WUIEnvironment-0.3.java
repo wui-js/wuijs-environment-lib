@@ -1,7 +1,7 @@
 /*
  * @file WUIEnvironment.java
  * @class WUIEnvironment
- * @version 0.4
+ * @version 0.3
  * @author Sergio E. Belmar V. (wuijs.project@gmail.com)
  * @copyright Sergio E. Belmar V. (wuijs.project@gmail.com)
  */
@@ -16,7 +16,6 @@ import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.DownloadManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
@@ -33,6 +32,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import androidx.core.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -53,8 +53,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 import androidx.activity.OnBackPressedCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -62,19 +60,20 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.PermissionChecker;
-import androidx.core.content.FileProvider;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.io.File;
+import android.app.DownloadManager;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -89,13 +88,13 @@ public class WUIEnvironment {
 	private boolean developMode = false;
 	private String deepLinkURL = null;
 	private boolean pageLoaded = false;
-	private final String className = "WUIEnvironment";
+	private final String logTag = "WUIEnvironment";
 	private final Map<Integer, Consumer<Boolean>> permissionCallbacks = new HashMap<>();
 	private final AtomicInteger permissionRequestCodeCounter = new AtomicInteger(1000);
 	private ValueCallback<Uri[]> fileChooserCallback = null;
 	private Uri cameraOutputUri = null;
-	private ActivityResultLauncher<Intent> fileChooserLauncher;
-	private ActivityResultLauncher<Intent> cameraLauncher;
+	private static final int FILE_CHOOSER_REQUEST_CODE = 2000;
+	private static final int CAMERA_REQUEST_CODE = 2001;
 
 	// Initialization
 
@@ -115,45 +114,18 @@ public class WUIEnvironment {
 		if (context instanceof AppCompatActivity) {
 			activity = (AppCompatActivity) context;
 			activity.setContentView(webView);
-			setupActivityResultLaunchers();
 			setupWebViewSettings();
-			setupWebViewClient();
+			setupWebViewClient(developMode);
 			setupBackPressHandler();
 			setupDownloadHandler();
 		}
 	}
 	
-	private void setupActivityResultLaunchers() {
-		cameraLauncher = activity.registerForActivityResult(
-			new ActivityResultContracts.StartActivityForResult(),
-			result -> {
-				if (fileChooserCallback == null) return;
-				Uri[] results = result.getResultCode() == android.app.Activity.RESULT_OK && cameraOutputUri != null
-					? new Uri[]{ cameraOutputUri } : null;
-				fileChooserCallback.onReceiveValue(results);
-				fileChooserCallback = null;
-				cameraOutputUri = null;
-			}
-		);
-		fileChooserLauncher = activity.registerForActivityResult(
-			new ActivityResultContracts.StartActivityForResult(),
-			result -> {
-				if (fileChooserCallback == null) return;
-				Intent data = result.getData();
-				Uri[] results = result.getResultCode() == android.app.Activity.RESULT_OK && data != null && data.getData() != null
-					? new Uri[]{ data.getData() } : null;
-				fileChooserCallback.onReceiveValue(results);
-				fileChooserCallback = null;
-				cameraOutputUri = null;
-			}
-		);
-	}
-
 	@SuppressLint("SetJavaScriptEnabled")
 	private void setupWebViewSettings() throws JSONException {
 		JSONObject appInfo = getAppInfo();
 		WebSettings webSettings = webView.getSettings();
-		webSettings.setUserAgentString(webSettings.getUserAgentString()+" "+className+" ("+appInfo.get("name")+"/"+appInfo.get("version")+")");
+		webSettings.setUserAgentString(webSettings.getUserAgentString()+" WUIEnvironment ("+appInfo.get("name")+"/"+appInfo.get("version")+")");
 		webSettings.setJavaScriptEnabled(true);
 		webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
 		webSettings.setAllowFileAccess(true);
@@ -176,7 +148,7 @@ public class WUIEnvironment {
 	}
 
 	@SuppressLint("JavascriptInterface")
-	private void setupWebViewClient() {
+	private void setupWebViewClient(boolean developMode) {
 		webView.addJavascriptInterface(new WebViewJavascriptInterface(), "Android");
 		webView.setWebChromeClient(new WebChromeClient() {
 			@Override
@@ -248,7 +220,7 @@ public class WUIEnvironment {
 									return;
 								}
 								try {
-									cameraLauncher.launch(finalCameraIntent);
+									activity.startActivityForResult(finalCameraIntent, CAMERA_REQUEST_CODE);
 								} catch (Exception e) {
 									fileChooserCallback.onReceiveValue(null);
 									fileChooserCallback = null;
@@ -258,7 +230,7 @@ public class WUIEnvironment {
 							});
 						} else {
 							try {
-								fileChooserLauncher.launch(fileIntent);
+								activity.startActivityForResult(fileIntent, FILE_CHOOSER_REQUEST_CODE);
 							} catch (Exception e) {
 								fileChooserCallback.onReceiveValue(null);
 								fileChooserCallback = null;
@@ -288,10 +260,11 @@ public class WUIEnvironment {
 				return true;
 			}
 			
+			@SuppressLint("WebViewClientOnReceivedSslError")
 			@Override
 			public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
 				int errorCode = error.getPrimaryError();
-				log("e", "SSL error: " + error);
+				log("e", "SSL error: " + error.toString());
 				switch (errorCode) {
 					case SslError.SSL_DATE_INVALID: log("e", "SSL error: Certificate date is invalid (code: " + errorCode + ")"); break;
 					case SslError.SSL_EXPIRED: log("e", "SSL error: Certificate has expired (code: " + errorCode + ")"); break;
@@ -300,9 +273,14 @@ public class WUIEnvironment {
 					case SslError.SSL_NOTYETVALID: log("e", "SSL error: Certificate is not yet valid (code: " + errorCode + ")"); break;
 					default: log("e", "SSL error: Unknown SSL error (code: " + errorCode + ")"); break;
 				}
-				handler.cancel();
+				if (developMode || errorCode == SslError.SSL_UNTRUSTED) {
+					handler.proceed();
+				} else {
+					handler.cancel();
+				}
 			}
 			
+			@RequiresApi(api = Build.VERSION_CODES.M)
 			@Override
 			public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
 				super.onReceivedError(view, request, error);
@@ -347,91 +325,89 @@ public class WUIEnvironment {
 
 	private void setupDownloadHandler() {
 		webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
-			String filename = "";
-			File downloadFile = null;
-			boolean downloaded = false;
-			log("d", "Start download '"+url+"'");
-			if (url.startsWith("file:///android_asset/")) {
-				try {
-					String assetPath = url.replace("file:///android_asset/", "");
-					File sourceFile = new File(activity.getCacheDir(), assetPath);
-					if (!sourceFile.exists()) {
-						File sourceParent = sourceFile.getParentFile();
-						if (sourceParent != null && !sourceParent.exists() && !sourceParent.mkdirs()) {
-							log("w", "Could not create cache directory: " + sourceParent.getAbsolutePath());
-						}
-						try (java.io.InputStream in = context.getAssets().open(assetPath);
-							java.io.FileOutputStream out = new java.io.FileOutputStream(sourceFile)) {
-							byte[] buffer = new byte[1024];
-							int len;
-							while ((len = in.read(buffer)) != -1) {
-								out.write(buffer, 0, len);
+				String filename = "";
+				File downloadFile = null;
+				boolean downloaded = false;
+				log("d", "Start download '"+url+"'");
+				if (url.startsWith("file:///android_asset/")) {
+					try {
+						String assetPath = url.replace("file:///android_asset/", "");
+						File sourceFile = new File(activity.getCacheDir(), assetPath);
+						if (!sourceFile.exists()) {
+							File sourceParent = sourceFile.getParentFile();
+							if (sourceParent != null) sourceParent.mkdirs();
+							try (java.io.InputStream in = context.getAssets().open(assetPath);
+								 java.io.FileOutputStream out = new java.io.FileOutputStream(sourceFile)) {
+								byte[] buffer = new byte[1024];
+								int len;
+								while ((len = in.read(buffer)) != -1) {
+									out.write(buffer, 0, len);
+								}
 							}
 						}
-					}
-					if (sourceFile.exists()) {
-						File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-						if (!downloadsDir.exists() && !downloadsDir.mkdirs()) {
-							log("w", "Could not create downloads directory");
-						}
-						filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
-						downloadFile = new File(downloadsDir, filename);
-						int version = 1;
-						while (downloadFile.exists()) {
-							String nameWithoutExt = filename.replaceFirst("[.][^.]+$", "");
-							String extension = filename.substring(filename.lastIndexOf('.'));
-							downloadFile = new File(downloadsDir, nameWithoutExt + " (" + version + ")" + extension);
-							version++;
-						}
-						try (java.io.FileInputStream in = new java.io.FileInputStream(sourceFile);
-							java.io.FileOutputStream out = new java.io.FileOutputStream(downloadFile)) {
-							byte[] buffer = new byte[1024];
-							int len;
-							while ((len = in.read(buffer)) != -1) {
-								out.write(buffer, 0, len);
+						if (sourceFile.exists()) {
+							File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+							if (!downloadsDir.exists() && !downloadsDir.mkdirs()) {
+								log("w", "Could not create downloads directory");
 							}
+							filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
+							downloadFile = new File(downloadsDir, filename);
+							int version = 1;
+							while (downloadFile.exists()) {
+								String nameWithoutExt = filename.replaceFirst("[.][^.]+$", "");
+								String extension = filename.substring(filename.lastIndexOf('.'));
+								downloadFile = new File(downloadsDir, nameWithoutExt + " (" + version + ")" + extension);
+								version++;
+							}
+							try (java.io.FileInputStream in = new java.io.FileInputStream(sourceFile);
+								 java.io.FileOutputStream out = new java.io.FileOutputStream(downloadFile)) {
+								byte[] buffer = new byte[1024];
+								int len;
+								while ((len = in.read(buffer)) != -1) {
+									out.write(buffer, 0, len);
+								}
+							}
+							log("i", "Asset file downloaded to: " + downloadFile.getAbsolutePath());
+							downloaded = true;
 						}
-						log("i", "Asset file downloaded to: " + downloadFile.getAbsolutePath());
-						downloaded = true;
+					} catch (Exception e) {
+						log("e", "Error downloading asset file: " + e.getMessage());
 					}
-				} catch (Exception e) {
-					log("e", "Error downloading asset file: " + e.getMessage());
+				} else {
+					filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
+					File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+					downloadFile = new File(downloadsDir, filename);
+					DownloadManager downloadManager = (DownloadManager) activity.getSystemService(Context.DOWNLOAD_SERVICE);
+					DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+					request.setTitle(filename);
+					request.setMimeType(mimetype);
+					request.allowScanningByMediaScanner();
+					request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+					request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename);
+					downloadManager.enqueue(request);
+					downloaded = true;
 				}
-			} else {
-				filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
-				File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-				downloadFile = new File(downloadsDir, filename);
-				DownloadManager downloadManager = (DownloadManager) activity.getSystemService(Context.DOWNLOAD_SERVICE);
-				DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-				request.setTitle(filename);
-				request.setMimeType(mimetype);
-				request.allowScanningByMediaScanner();
-				request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-				request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename);
-				downloadManager.enqueue(request);
-				downloaded = true;
-			}
-			if (downloaded) {
-				MediaScannerConnection.scanFile(context, new String[]{downloadFile.getAbsolutePath()}, null, null);
-				Intent openIntent = new Intent(Intent.ACTION_VIEW);
-				Uri uri = Uri.fromFile(downloadFile);
-				openIntent.setDataAndType(uri, mimetype != null && !mimetype.isEmpty() ? mimetype : "application/octet-stream");
-				openIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				try {
-					context.startActivity(openIntent);
-				} catch (Exception e) {
-					log("e", "No app found to open the file: " + e.getMessage());
-				}
-				try {
-					JSONObject arguments = new JSONObject();
-					arguments.put("event", "onDownloadFile");
-					arguments.put("filename", filename);
-					arguments.put("mimetype", mimetype);
-					arguments.put("uri", uri.toString());
-					pushJavascript(arguments);
-				} catch (JSONException e) {
-					throw new RuntimeException(e);
-				}
+				if (downloaded) {
+					MediaScannerConnection.scanFile(context, new String[]{downloadFile.getAbsolutePath()}, null, null);
+					Intent openIntent = new Intent(Intent.ACTION_VIEW);
+					Uri uri = Uri.fromFile(downloadFile);
+					openIntent.setDataAndType(uri, mimetype != null && !mimetype.isEmpty() ? mimetype : "application/octet-stream");
+					openIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					try {
+						context.startActivity(openIntent);
+					} catch (Exception e) {
+						log("e", "No app found to open the file: " + e.getMessage());
+					}
+					try {
+						JSONObject arguments = new JSONObject();
+						arguments.put("event", "onDownloadFile");
+						arguments.put("filename", filename);
+						arguments.put("mimetype", mimetype);
+						arguments.put("uri", uri.toString());
+						pushJavascript(arguments);
+					} catch (JSONException e) {
+						throw new RuntimeException(e);
+					}
 			}
 		});
 	}
@@ -492,6 +468,22 @@ public class WUIEnvironment {
 		callback.accept(granted);
 	}
 
+	public void handleFileChooserResult(int requestCode, int resultCode, Intent data) {
+		if (fileChooserCallback == null) return;
+		if (requestCode == CAMERA_REQUEST_CODE) {
+			Uri[] results = resultCode == android.app.Activity.RESULT_OK && cameraOutputUri != null
+				? new Uri[]{ cameraOutputUri } : null;
+			fileChooserCallback.onReceiveValue(results);
+			fileChooserCallback = null;
+			cameraOutputUri = null;
+		} else if (requestCode == FILE_CHOOSER_REQUEST_CODE) {
+			Uri[] results = resultCode == android.app.Activity.RESULT_OK && data != null && data.getData() != null
+				? new Uri[]{ data.getData() } : null;
+			fileChooserCallback.onReceiveValue(results);
+			fileChooserCallback = null;
+			cameraOutputUri = null;
+		}
+	}
 
 	public boolean isAppInForeground() {
 		ActivityManager activityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
@@ -583,8 +575,8 @@ public class WUIEnvironment {
 			boolean statusbarTransparent = (window.getAttributes().flags & WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS) != 0;
 			boolean statusbarLightMode = (decorView.getSystemUiVisibility() & View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR) != 0;
 			boolean statusbarOverlay = statusbarTransparent
-				|| (window.getAttributes().flags & WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS) != 0
-				|| android.graphics.Color.alpha(window.getStatusBarColor()) < 255;
+					|| (window.getAttributes().flags & WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS) != 0
+					|| android.graphics.Color.alpha(window.getStatusBarColor()) < 255;
 			boolean navigationbarTransparent = (window.getAttributes().flags & WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION) != 0;
 			boolean navigationbarLightMode = (decorView.getSystemUiVisibility() & View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR) != 0;
 			boolean navigationbarOverlay = navigationbarTransparent
@@ -745,14 +737,13 @@ public class WUIEnvironment {
 				try {
 					String provider = isGpsEnabled ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
 					locationManager.getCurrentLocation(
-						provider,
-						null,
-						activity.getMainExecutor(),
-						loc -> {
-							freshLocation[0] = loc;
-							latch.countDown();
-						}
-					);
+							provider,
+							null,
+							activity.getMainExecutor(),
+							loc -> {
+								freshLocation[0] = loc;
+								latch.countDown();
+							});
 					// Wait up to 5 seconds for a fresh location
 					if (latch.await(5, TimeUnit.SECONDS)) {
 						location = freshLocation[0];
@@ -831,7 +822,6 @@ public class WUIEnvironment {
 		});
 	}
 
-	@RequiresApi(api = Build.VERSION_CODES.O)
 	public void setNavigationbarStyle(String color, boolean darkIcons) {
 		activity.runOnUiThread(() -> {
 			Window window = activity.getWindow();
@@ -931,7 +921,6 @@ public class WUIEnvironment {
 		}
 	}
 
-	@RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
 	public String readFile(String name) {
 		try (FileInputStream fileInput = activity.openFileInput(name)) {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -940,7 +929,7 @@ public class WUIEnvironment {
 			while ((len = fileInput.read(buffer)) != -1) {
 				baos.write(buffer, 0, len);
 			}
-			String result = baos.toString(StandardCharsets.UTF_8);
+			String result = baos.toString(java.nio.charset.StandardCharsets.UTF_8.name());
 			log("i", "File read: " + name);
 			return result;
 		} catch (IOException e) {
@@ -1055,10 +1044,10 @@ public class WUIEnvironment {
 	private void log(String level, String message, boolean force) {
 		if (!developMode && !force) return;
 		switch (level) {
-			case "d": Log.d(className, message); break;
-			case "i": Log.i(className, message); break;
-			case "w": Log.w(className, message); break;
-			case "e": Log.e(className, message); break;
+			case "d": Log.d(logTag, message); break;
+			case "i": Log.i(logTag, message); break;
+			case "w": Log.w(logTag, message); break;
+			case "e": Log.e(logTag, message); break;
 		}
 	}
 
@@ -1072,7 +1061,6 @@ public class WUIEnvironment {
 	}
 
 	class WebViewJavascriptInterface {
-		@RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
 		@JavascriptInterface
 		public String request(String argumentsString) throws JSONException {
 			JSONObject arguments = new JSONObject(argumentsString);
@@ -1080,7 +1068,7 @@ public class WUIEnvironment {
 			if (func.matches("^(getDeviceInfo|getDisplayInfo|getAppInfo|getPermissionsStatus|getCurrentPosition|readFile|readDeepLink)$")) {
 				return
 					func.equals("getDeviceInfo") ? getDeviceInfo().toString() :
-					func.equals("getDisplayInfo") ? getDisplayInfo().toString() :
+					func.equals("getDisplayInfo") && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? getDisplayInfo().toString() :
 					func.equals("getAppInfo") ? getAppInfo().toString() :
 					func.equals("getPermissionsStatus") ? getPermissionsStatus().toString() :
 					func.equals("getCurrentPosition") ? getCurrentPosition().toString() :

@@ -14,9 +14,9 @@
 |                      | |
 | -------------------- | ----------- |
 | **Library name**     | `wuijs-environment-lib` |
-| **Library version**  | `0.3.1` ([Change Log](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-en.md)) |
+| **Library version**  | `0.4.0` ([Change Log](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-en.md)) |
 | **NPM package**      | `@wui-js/environment` ([npm](https://www.npmjs.com/package/@wui-js/environment)) |
-| **Document version** | `0.3.1.20260506.0` |
+| **Document version** | `0.4.0.20260512.0` |
 | **License**          | `Apache License 2.0` |
 | **Author**           | `Sergio E. Belmar V. <wuijs.project@gmail.com>` |
 | **Repository**       | [https://github.com/wui-js/wuijs-environment-lib](https://github.com/wui-js/wuijs-environment-lib) |
@@ -31,7 +31,7 @@
 *   [Quick Start](#quickstart)
 	*   [Android + Web](#quickstart-android)
 	*   [iOS + Web](#quickstart-ios)
-*   [Android Implementation](#android)
+*   [Android Library](#android)
 	*   [Java Constructor](#android-constructor)
 	*   [Java Methods](#android-methods)
 	*   [Android Events](#android-events)
@@ -45,7 +45,7 @@
 		6.   [Java Class Integration](#android-config-wui-environment-java)
 		7.   [JavaScript Class Integration](#android-config-wui-environment-js)
 		8.   [MainActivity Initialization](#android-config-mainactivity)
-*   [iOS Implementation](#ios)
+*   [iOS Library](#ios)
 	*   [Swift Constructor](#ios-constructor)
 	*   [Swift Methods](#ios-methods)
 	*   [iOS Events](#ios-events)
@@ -58,11 +58,11 @@
 		5.   [JavaScript Class Integration](#ios-config-wui-environment-js)
 		6.   [PackageApp Initialization](#ios-config-packageapp)
 		7.   [MainView Initialization](#ios-config-mainview)
-*   [Web Implementation](#web)
+*   [Web Library](#web)
 	*   [JavaScript Properties](#web-properties)
 	*   [JavaScript Class Methods](#web-class-methods)
 	*   [JavaScript Instance Methods](#web-instance-methods)
-	*   [JavaScript Usage](#web-js-usage)
+	*   [JavaScript Usage](#web-usage)
 
 <a name="overview"></a>
 
@@ -79,11 +79,11 @@ It is currently available for Android in Java via WebView and for iOS in Swift v
 WUI/JS Environment Lib is part of the WUI/JS project, which currently consists of 4 repositories:
 
 -	[https://github.com/wui-js/wuijs-main-lib](https://github.com/wui-js/wuijs-main-lib)<br>
-	Main UI library.<br><br>
--	[https://github.com/wui-js/wuijs-plugins-lib](https://github.com/wui-js/wuijs-plugins-lib)<br>
-	UI plugins library.<br><br>
+	UI Main library.<br><br>
 -	[https://github.com/wui-js/wuijs-environment-lib](https://github.com/wui-js/wuijs-environment-lib)<br>
-	Bridge library between a web environments and native web rendering engines.<br><br>
+	UI Bridge library between a web environments and native web rendering engines.<br><br>
+-	[https://github.com/wui-js/wuijs-plugins-lib](https://github.com/wui-js/wuijs-plugins-lib)<br>
+	UI Plugins library.<br><br>
 -	[https://github.com/wui-js/wuijs-demos](https://github.com/wui-js/wuijs-demos)<br>
 	Repository with demos and usage examples for the project libraries.<br><br>
 
@@ -134,7 +134,7 @@ wuijs-environment-lib/
 
 | Type  | Version | File |
 | ----- | -------:| ---- |
-| Java  | 0.3     | [src/wui-js/environment/android/WUIEnvironment.java](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/android/WUIEnvironment.java) |
+| Java  | 0.4     | [src/wui-js/environment/android/WUIEnvironment.java](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/android/WUIEnvironment.java) |
 | Swift | 0.3     | [src/wui-js/environment/ios/WUIEnvironment.swift](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/ios/WUIEnvironment.swift) |
 | JS    | 0.2     | [src/wui-js/environment/web/wui-environment-0.2.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.2.js) |
 
@@ -206,9 +206,17 @@ wuiEnvironment?.openURL(url: Bundle.main.bundleURL.appendingPathComponent("asset
 
 <a name="android"></a>
 
-## Android Implementation
+## Android Library
 
-The Android implementation uses WebView as its rendering engine.
+Version: `0.4`
+
+The Android library uses **WebView** as its rendering engine.
+
+### Sources
+
+| Type | File |
+|:----:| ---- |
+| Java | [src/wui-js/environment/android/WUIEnvironment.java](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/android/WUIEnvironment.java) |
 
 <a name="android-constructor"></a>
 
@@ -530,12 +538,20 @@ public class MainActivity extends AppCompatActivity {
 
 <a name="ios"></a>
 
-## iOS Implementation
+## iOS Library
+
+Version: `0.3`
 
 The iOS implementation uses WebKit (WKWebView) as its rendering engine and communicates via `WKScriptMessageHandler`.
 
 > [!NOTE]
 > **`file://` XHR limitation in WKWebView:** WKWebView blocks all `XMLHttpRequest` calls to `file://` URLs regardless of the `allowingReadAccessTo` setting. `WUIEnvironment` automatically injects a `WKUserScript` at document start that intercepts these requests and routes them through the native bridge via `webkit.messageHandlers.request`. This is transparent to your JavaScript code — `XMLHttpRequest` works as expected for both local files and remote URLs.
+
+### Sources
+
+| Type  | File |
+|:-----:| ---- |
+| Swift | [src/wui-js/environment/ios/WUIEnvironment.swift](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/ios/WUIEnvironment.swift) |
 
 <a name="ios-constructor"></a>
 
@@ -805,35 +821,17 @@ class EnvironmentViewController: UIViewController {
 
 <a name="web"></a>
 
-## Web Implementation
+## Web Library
 
-The JavaScript class `WUIEnvironment` must be included in every HTML page that uses the bridge. Copy `wui-environment-0.2.js` to the project's assets folder and load it with a `<script>` tag before any bridge calls:
+Version: `0.2`
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-	<script src="libraries/wui-js/environment/web/wui-environment-0.2.js"></script>
-</head>
-<body>
-	<script>
-		const env = new WUIEnvironment();
-		env.getDeviceInfo(function(info) {
-			console.log("Platform:", info.platform);
-		});
-	</script>
-</body>
-</html>
-```
+The web implementation uses the JavaScript class `WUIEnvironment` as its source, which must be included in every HTML page that uses the bridge. Copy `wui-environment-0.2.js` to the project's assets folder and load it with a `<script>` tag before any bridge calls:
 
-> [!NOTE]
-> The `src` path is relative to the HTML file. For Android, assets are loaded from `app/src/main/assets/`; for iOS, from the `assets/` folder added to the Xcode target. The recommended path `libraries/wui-js/environment/web/wui-environment-0.2.js` matches the structure described in the installation steps.
+### Sources
 
-**Bridge behavior by platform:**
-- **Android**: calls are **synchronous** — `Android.request()` returns the result immediately.
-- **iOS**: calls are **asynchronous** — the native side calls `WUIEnvironment.response()` when done.
-
-The JS library abstracts both into the same callback-based API.
+| Type | File |
+|:----:| ---- |
+| JS   | [src/wui-js/environment/web/wui-environment-0.2.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.2.js) |
 
 <a name="web-properties"></a>
 
@@ -893,9 +891,36 @@ Static members of the `WUIEnvironment` class.
 | `clearDeepLink`         | `void`                    | `clearDeepLink([done])`<br><br>Arguments:<br>**• done:** `function` *optional*, callback.<br><br>Clears the stored Deep Link URL. No-op on web. |
 | `log`                   | `void`                    | `log(message[, force])`<br><br>Arguments:<br>**• message:** `any`, value to log (coerced to string).<br>**• force:** `boolean` *optional*, default `false`. When `true`, instructs the native side to bypass its `developMode` restriction and always write the message.<br><br>Inside a native WebView forwards the message to the native logger (Logcat / Xcode console). On web falls back to `console.log`. |
 
-<a name="web-js-usage"></a>
+<a name="web-usage"></a>
 
 ### JavaScript Usage
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="libraries/wui-js/environment/web/wui-environment-0.2.js"></script>
+</head>
+<body>
+	<script>
+		const env = new WUIEnvironment();
+		env.getDeviceInfo(function(info) {
+			console.log("Platform:", info.platform);
+		});
+	</script>
+</body>
+</html>
+```
+
+> [!NOTE]
+> The `src` path is relative to the HTML file. For Android, assets are loaded from `app/src/main/assets/`; for iOS, from the `assets/` folder added to the Xcode target. The recommended path `libraries/wui-js/environment/web/wui-environment-0.2.js` matches the structure described in the installation steps.
+
+**Bridge behavior by platform:**
+
+- **Android**: calls are **synchronous** — `Android.request()` returns the result immediately.
+- **iOS**: calls are **asynchronous** — the native side calls `WUIEnvironment.response()` when done.
+
+The JS library abstracts both into the same callback-based API.
 
 ```js
 const env = new WUIEnvironment();

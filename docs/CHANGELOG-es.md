@@ -5,7 +5,15 @@
 [Español](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-es.md)
 ---
 
-# Change Log
+# Registro de Cambios
+
+## [v0.4.0] - 2026-05-14
+
+Características:
+
+1. **Android** - Se actualizó la librería Java a la versión `0.4`.
+	- Correcciones de errores:
+		- Se mejoró la implementación del controlador de errores SSL de WebView para cumplir con los requerimientos de la Play Store [Device and Network Abuse policy](https://support.google.com/googleplay/android-developer/answer/16559646).
 
 ## [v0.3.1] - 2026-05-06
 
@@ -17,26 +25,26 @@ Características:
 
 Características:
 
-1. **Android — file input con soporte de cámara**: `onShowFileChooser` ahora presenta un `AlertDialog` nativo con dos opciones ("Tomar foto" / "Elegir de galería"). Cada opción lanza su intent directamente desde la `Activity` con request codes separados (`CAMERA_REQUEST_CODE` = 2001, `FILE_CHOOSER_REQUEST_CODE` = 2000), garantizando que `onActivityResult` reciba el resultado correctamente. El permiso de cámara se solicita en el momento en que el usuario selecciona "Tomar foto". El host `Activity` debe implementar `onActivityResult` y llamar a `wuiEnvironment.handleFileChooserResult(requestCode, resultCode, data)`.
+1. **Android** - Se actualizó la librería Java a la versión `0.3`.
+	- File input con soporte de cámara: `onShowFileChooser` ahora presenta un `AlertDialog` nativo con dos opciones ("Tomar foto" / "Elegir de galería"). Cada opción lanza su intent directamente desde la `Activity` con request codes separados (`CAMERA_REQUEST_CODE` = 2001, `FILE_CHOOSER_REQUEST_CODE` = 2000), garantizando que `onActivityResult` reciba el resultado correctamente. El permiso de cámara se solicita en el momento en que el usuario selecciona "Tomar foto". El host `Activity` debe implementar `onActivityResult` y llamar a `wuiEnvironment.handleFileChooserResult(requestCode, resultCode, data)`.
+	- Correcciones de errores:
+		- Crash en `requestPermission()` con callback `null`**: llamar `requestPermission(type, null)` desde código nativo lanzaba `NullPointerException` en Android < 13 (notifications) y en los paths `default`/`allGranted`. Todas las llamadas a `callback.accept()` ahora verifican null antes de invocar.
+	- Calidad de código:
+		- `setupWebViewSettings()`: se eliminó el parámetro `developMode` que no se usaba.
+		- `setupDownloadHandler()`: `DownloadListener` anónimo convertido a lambda; se eliminó el branch vacío `data:`.
+		- `setStatusbarStyle()`, `setNavigationbarStyle()`, `openURL()`: `Runnable` anónimos convertidos a lambdas.
+		- `setNavigationbarStyle()`: eliminado guard `SDK_INT >= O` innecesario (siempre verdadero dado el minSdk).
+		- `getDisplayInfo()`: eliminado wrapper `SDK_INT >= M` innecesario (siempre verdadero dado el minSdk).
+		- `getCurrentPosition()`: `Consumer<Location>` anónimo convertido a lambda; agregado `@SuppressLint("MissingPermission")` (el permiso ya se verifica vía `requestPermissionSync`).
+		- `handlePermissionResult()`: agregado `@SuppressWarnings("unused")` en el parámetro `permissions`.
+		- `requestPermissionSync()`: se maneja el valor de retorno ignorado de `CountDownLatch.await()`.
+		- `setupDownloadHandler()`: null-check en `getParentFile()` antes de `mkdirs()`; se maneja el valor de retorno de `mkdirs()` en el directorio de descargas.
+		- `saveFile()` / `readFile()`: reemplazado el literal `"UTF-8"` por `StandardCharsets.UTF_8`.
+		- Corregido error tipográfico en mensaje de log: `"File readed"` → `"File read"`.
 
-Correcciones de errores:
-
-1. **Android — crash en `requestPermission()` con callback `null`**: llamar `requestPermission(type, null)` desde código nativo lanzaba `NullPointerException` en Android < 13 (notifications) y en los paths `default`/`allGranted`. Todas las llamadas a `callback.accept()` ahora verifican null antes de invocar.
-2. **iOS — `isAppInForeground()` retorna `false` con la app en primer plano**: el check `applicationState == .active` excluía el estado `.inactive`, que cubre transiciones en primer plano (carga inicial, llamada entrante, selector de apps). Cambiado a `applicationState != .background` para que cualquier estado que no sea background retorne `true`.
-
-Calidad de código (Android):
-
-- `setupWebViewSettings()`: se eliminó el parámetro `developMode` que no se usaba.
-- `setupDownloadHandler()`: `DownloadListener` anónimo convertido a lambda; se eliminó el branch vacío `data:`.
-- `setStatusbarStyle()`, `setNavigationbarStyle()`, `openURL()`: `Runnable` anónimos convertidos a lambdas.
-- `setNavigationbarStyle()`: eliminado guard `SDK_INT >= O` innecesario (siempre verdadero dado el minSdk).
-- `getDisplayInfo()`: eliminado wrapper `SDK_INT >= M` innecesario (siempre verdadero dado el minSdk).
-- `getCurrentPosition()`: `Consumer<Location>` anónimo convertido a lambda; agregado `@SuppressLint("MissingPermission")` (el permiso ya se verifica vía `requestPermissionSync`).
-- `handlePermissionResult()`: agregado `@SuppressWarnings("unused")` en el parámetro `permissions`.
-- `requestPermissionSync()`: se maneja el valor de retorno ignorado de `CountDownLatch.await()`.
-- `setupDownloadHandler()`: null-check en `getParentFile()` antes de `mkdirs()`; se maneja el valor de retorno de `mkdirs()` en el directorio de descargas.
-- `saveFile()` / `readFile()`: reemplazado el literal `"UTF-8"` por `StandardCharsets.UTF_8`.
-- Corregido error tipográfico en mensaje de log: `"File readed"` → `"File read"`.
+2. **iOS** - Se actualizó la librería Swift a la versión `0.3`.
+	- Correcciones de errores:
+		- `isAppInForeground()` retorna `false` con la app en primer plano**: el check `applicationState == .active` excluía el estado `.inactive`, que cubre transiciones en primer plano (carga inicial, llamada entrante, selector de apps). Cambiado a `applicationState != .background` para que cualquier estado que no sea background retorne `true`.
 
 ## [v0.2.0] - 2026-04-26
 
