@@ -14,9 +14,9 @@
 |                      | |
 | -------------------- | ----------- |
 | **Library name**     | `wuijs-environment-lib` |
-| **Library version**  | `0.4.0` ([Change Log](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-en.md)) |
+| **Library version**  | `0.5.0` ([Change Log](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-en.md)) |
 | **NPM package**      | `@wui-js/environment` ([npm](https://www.npmjs.com/package/@wui-js/environment)) |
-| **Document version** | `0.4.0.20260512.0` |
+| **Document version** | `0.5.0.20260701.0` |
 | **License**          | `Apache License 2.0` |
 | **Author**           | `Sergio E. Belmar V. <wuijs.project@gmail.com>` |
 | **Repository**       | [https://github.com/wui-js/wuijs-environment-lib](https://github.com/wui-js/wuijs-environment-lib) |
@@ -136,7 +136,7 @@ wuijs-environment-lib/
 | ----- | :------:| ---- |
 | Java  | 0.4     | [src/wui-js/environment/android/WUIEnvironment.java](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/android/WUIEnvironment.java) |
 | Swift | 0.3     | [src/wui-js/environment/ios/WUIEnvironment.swift](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/ios/WUIEnvironment.swift) |
-| JS    | 0.2     | [src/wui-js/environment/web/wui-environment-0.2.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.2.js) |
+| JS    | 0.3     | [src/wui-js/environment/web/wui-environment-0.3.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.3.js) |
 
 <a name="quickstart"></a>
 
@@ -157,14 +157,14 @@ Minimal integration for a new project. For full configuration details see the pl
 
 ```java
 wuiEnvironment = new WUIEnvironment(this);
-wuiEnvironment.openURL("file:///android_asset/libraries/wui-js/environment/demo/index.html");
+wuiEnvironment.openUrl("file:///android_asset/libraries/wui-js/environment/demo/index.html");
 wuiEnvironment.saveDeepLink(getIntent());
 ```
 
 5. In your own HTML pages, include the JS class and instantiate it:
 
 ```html
-<script src="libraries/wui-js/environment/web/wui-environment-0.2.js"></script>
+<script src="libraries/wui-js/environment/web/wui-environment-0.3.js"></script>
 <script>
 	const env = new WUIEnvironment();
 	env.getDeviceInfo(function(info) {
@@ -186,13 +186,13 @@ wuiEnvironment.saveDeepLink(getIntent());
 
 ```swift
 wuiEnvironment = WUIEnvironment(viewController: self)
-wuiEnvironment?.openURL(url: Bundle.main.bundleURL.appendingPathComponent("assets/libraries/wui-js/environment/demo/index.html").absoluteString)
+wuiEnvironment?.openUrl(url: Bundle.main.bundleURL.appendingPathComponent("assets/libraries/wui-js/environment/demo/index.html").absoluteString)
 ```
 
 5. In your own HTML pages, include the JS class and instantiate it:
 
 ```html
-<script src="libraries/wui-js/environment/web/wui-environment-0.2.js"></script>
+<script src="libraries/wui-js/environment/web/wui-environment-0.3.js"></script>
 <script>
 	const env = new WUIEnvironment();
 	env.getDeviceInfo(function(info) {
@@ -247,7 +247,7 @@ The Android library uses **WebView** as its rendering engine.
 | `readFile`              | `String`     | `readFile(name)`<br><br>Arguments:<br>**• name:** `String`, file name.<br><br>Reads a file from internal storage. Returns `null` if the file does not exist or an error occurs. |
 | `removeFile`            | `boolean`    | `removeFile(name)`<br><br>Arguments:<br>**• name:** `String`, file name.<br><br>Deletes a file from internal storage. Returns `true` on success. |
 | `openAppSettings`       | `void`       | `openAppSettings()`<br><br>Opens the application settings screen in the system Settings app. |
-| `openURL`               | `void`       | `openURL(url)`<br><br>Arguments:<br>**• url:** `String`, destination URL or local asset path (`file:///android_asset/...`).<br><br>Loads a local asset directly in the WebView or opens an external URL via the system Intent. |
+| `openUrl`               | `void`       | `openUrl(url)`<br><br>Arguments:<br>**• url:** `String`, destination URL or local asset path (`file:///android_asset/...`).<br><br>Loads a local asset directly in the WebView or opens an external URL via the system Intent. |
 | `saveDeepLink`          | `void`       | `saveDeepLink(intent)`<br><br>Arguments:<br>**• intent:** `Intent`, intent received in `onCreate` or `onNewIntent`.<br><br>Extracts and stores the Deep Link URL from the intent. If the page is already loaded, it is sent to JavaScript immediately. |
 | `sendDeepLink`          | `void`       | `sendDeepLink()`<br><br>Sends the stored Deep Link URL to JavaScript by calling `WUIEnvironment.response()`. Only acts if the page is already loaded. |
 | `readDeepLink`          | `String`     | `readDeepLink()`<br><br>Returns the last stored Deep Link URL, or `null` if none is stored. |
@@ -439,11 +439,11 @@ package YOUR.PACKAGE.NAME; // Update this to match your project package
 
 <a name="android-config-wui-environment-js"></a>
 
-#### 7. JavaScript Class Integration `wui-environment-0.2.js`
+#### 7. JavaScript Class Integration `wui-environment-0.3.js`
 
 Copy the contents of the `src/wui-js/environment/web/` directory to the `assets/` directory of the Android project. The following structure is recommended:
 
-- `app/src/main/assets/libraries/wui-js/environment/web/wui-environment-0.2.js`
+- `app/src/main/assets/libraries/wui-js/environment/web/wui-environment-0.3.js`
 - `app/src/main/assets/libraries/wui-js/environment/demo/index.html`
 
 The above ensures that the initialization examples work correctly.
@@ -479,7 +479,7 @@ public class MainActivity extends AppCompatActivity {
 			String path = "libraries/wui-js/environment/demo/index.html";
 			// uncomment the following line after validating the test
 			//String path = "file:///android_asset/pages/index.html";
-			wuiEnvironment.openURL("file:///android_asset/" + path);
+			wuiEnvironment.openUrl("file:///android_asset/" + path);
 
 			// Request basic permissions
 
@@ -582,7 +582,7 @@ The iOS implementation uses WebKit (WKWebView) as its rendering engine and commu
 | `readFile`              | `String?`       | `readFile(name)`<br><br>Arguments:<br>**• name:** `String`, file name.<br><br>Reads a file from the `Documents` directory. Returns `nil` if the file does not exist or an error occurs. |
 | `removeFile`            | `Bool`          | `removeFile(name)`<br><br>Arguments:<br>**• name:** `String`, file name.<br><br>Deletes a file from the `Documents` directory. Returns `true` on success. |
 | `openAppSettings`       | `void`          | `openAppSettings()`<br><br>Opens the application settings screen in the system Settings app. |
-| `openURL`               | `void`          | `openURL(url)`<br><br>Arguments:<br>**• url:** `String`, destination URL or local file path (`file://...`).<br><br>Loads a local file in the WKWebView via `loadFileURL` or opens an external URL via `UIApplication.shared.open`. |
+| `openUrl`               | `void`          | `openUrl(url)`<br><br>Arguments:<br>**• url:** `String`, destination URL or local file path (`file://...`).<br><br>Loads a local file in the WKWebView via `loadFileURL` or opens an external URL via `UIApplication.shared.open`. |
 | `saveDeepLink`          | `void`          | `saveDeepLink(url)`<br><br>Arguments:<br>**• url:** `URL?`, URL received in `scene(_:openURLContexts:)` or `application(_:open:)`.<br><br>Extracts and stores the Deep Link URL. If the page is already loaded, it is sent to JavaScript immediately. |
 | `sendDeepLink`          | `void`          | `sendDeepLink()`<br><br>Sends the stored Deep Link URL to JavaScript by calling `WUIEnvironment.response()`. Only acts if the page is already loaded. |
 | `readDeepLink`          | `String?`       | `readDeepLink()`<br><br>Returns the last stored Deep Link URL, or `nil` if none is stored. |
@@ -702,11 +702,11 @@ Copy the file `src/wui-js/environment/ios/WUIEnvironment.swift` into the Xcode p
 
 <a name="ios-config-wui-environment-js"></a>
 
-#### 5. JavaScript Class Integration `wui-environment-0.2.js`
+#### 5. JavaScript Class Integration `wui-environment-0.3.js`
 
 Copy the contents of the `src/wui-js/environment/web/` directory to the `assets/` directory of the Xcode project. The following structure is recommended:
 
-- `package/assets/libraries/wui-js/environment/web/wui-environment-0.2.js`
+- `package/assets/libraries/wui-js/environment/web/wui-environment-0.3.js`
 - `package/assets/libraries/wui-js/environment/demo/index.html`
 
 The above ensures that the initialization examples work correctly.
@@ -791,7 +791,7 @@ class EnvironmentViewController: UIViewController {
 		let path = "assets/libraries/wui-js/environment/demo/index.html"
 		// uncomment the following line after validating the test
 		//let path = "assets/pages/index.html"
-		wuiEnvironment?.openURL(url: Bundle.main.bundleURL.appendingPathComponent(path).absoluteString)
+		wuiEnvironment?.openUrl(url: Bundle.main.bundleURL.appendingPathComponent(path).absoluteString)
 
 		// Request basic permissions
 		
@@ -823,15 +823,15 @@ class EnvironmentViewController: UIViewController {
 
 ## Web Library
 
-Version: `0.2`
+Version: `0.3`
 
-The web implementation uses the JavaScript class `WUIEnvironment` as its source, which must be included in every HTML page that uses the bridge. Copy `wui-environment-0.2.js` to the project's assets folder and load it with a `<script>` tag before any bridge calls:
+The web implementation uses the JavaScript class `WUIEnvironment` as its source, which must be included in every HTML page that uses the bridge. Copy `wui-environment-0.3.js` to the project's assets folder and load it with a `<script>` tag before any bridge calls:
 
 ### Sources
 
 | Type | File |
 |:----:| ---- |
-| JS   | [src/wui-js/environment/web/wui-environment-0.2.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.2.js) |
+| JS   | [src/wui-js/environment/web/wui-environment-0.3.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.3.js) |
 
 <a name="web-properties"></a>
 
@@ -868,7 +868,9 @@ Static members of the `WUIEnvironment` class.
 | Method                  | Return type               | Description |
 | ----------------------- | ------------------------- | ----------- |
 | `requestPermission`     | `Promise<boolean>`        | `requestPermission(type[, done])`<br><br>Arguments:<br>**• type:** `string`, one of `location`, `notifications`, `camera`, `contacts`, `storage`.<br>**• done:** `function` *optional*, callback.<br><br>Requests the system permission for the given type. Inside a native WebView delegates to the bridge (`requestPermission`). On web falls back to `navigator.permissions.query`. Resolves with `true` when granted. |
-| `isLocal`               | `boolean`                 | `isLocal()`<br><br>Returns `true` when running inside a native WebView (`local.android` or `local.ios`). Returns `null` on web. Resolved synchronously at call time from the value set at construction. |
+| `isLocal`               | `boolean`                 | `isLocal()`<br><br>Alias for `isLocalAgent()`. Returns `true` when running inside a native WebView (`local.android` or `local.ios`). Resolved synchronously. |
+| `isLocalAgent`          | `boolean`                 | `isLocalAgent()`<br><br>Returns `true` when the detected environment is `local.android` or `local.ios` (i.e. the page is running inside a native WebView with the WUIEnvironment bridge active). Returns `false` on plain web. Resolved synchronously from the value set at construction. |
+| `isLocalHost`           | `boolean`                 | `isLocalHost()`<br><br>Returns `true` when `location.hostname` is `"localhost"` or `"127.0.0.1"`. Useful for distinguishing local development from production without relying on the native bridge. |
 | `isMobile`              | `boolean`                 | `isMobileEnvironment()`<br><br>Returns `true` when running on a mobile device (Android, iOS or Windows Phone). Returns `false` on web. Resolved synchronously at call time from the value set at construction. |
 | `isTouch`               | `boolean`                 | `isTouch()`<br><br>Returns `true` when running on a device with a touch screen. Returns `false` on web. Resolved synchronously at call time from the value set at construction. |
 | `isTablet`              | `boolean`                 | `isTablet()`<br><br>Returns `true` when running on a tablet device (Android, iOS or Windows Phone). Returns `false` on web. Resolved synchronously at call time from the value set at construction. |
@@ -886,7 +888,7 @@ Static members of the `WUIEnvironment` class.
 | `readFile`              | `Promise<string\|Object>` | `readFile(name[, done])`<br><br>Arguments:<br>**• name:** `string`, file name.<br>**• done:** `function` *optional*, callback.<br><br>Reads a file from native storage. `.json` files are parsed automatically. On web uses `localStorage` if `localStorage` is `true`. |
 | `removeFile`            | `Promise<boolean>`        | `removeFile(name[, done])`<br><br>Arguments:<br>**• name:** `string`, file name.<br>**• done:** `function` *optional*, callback.<br><br>Deletes a file from native storage. On web uses `localStorage`. |
 | `openAppSettings`       | `void`                    | `openAppSettings([done])`<br><br>Arguments:<br>**• done:** `function` *optional*, callback.<br><br>Opens the application settings screen. No-op on web. |
-| `openURL`               | `void`                    | `openURL(url)`<br><br>Arguments:<br>**• url:** `string`, the destination URL or local asset path.<br><br>Opens a local resource in the WebView or an external link. On web opens via `window.open`. |
+| `openUrl`               | `void`                    | `openUrl(url)`<br><br>Arguments:<br>**• url:** `string`, the destination URL or local asset path.<br><br>Opens a local resource in the WebView or an external link. On web opens via `window.open`. |
 | `readDeepLink`          | `Promise<string>`         | `readDeepLink([done])`<br><br>Arguments:<br>**• done:** `function` *optional*, callback.<br><br>Reads the last received Deep Link URL. Returns `null` on web. |
 | `clearDeepLink`         | `void`                    | `clearDeepLink([done])`<br><br>Arguments:<br>**• done:** `function` *optional*, callback.<br><br>Clears the stored Deep Link URL. No-op on web. |
 | `log`                   | `void`                    | `log(message[, force])`<br><br>Arguments:<br>**• message:** `any`, value to log (coerced to string).<br>**• force:** `boolean` *optional*, default `false`. When `true`, instructs the native side to bypass its `developMode` restriction and always write the message.<br><br>Inside a native WebView forwards the message to the native logger (Logcat / Xcode console). On web falls back to `console.log`. |
@@ -899,7 +901,7 @@ Static members of the `WUIEnvironment` class.
 <!DOCTYPE html>
 <html>
 <head>
-	<script src="libraries/wui-js/environment/web/wui-environment-0.2.js"></script>
+	<script src="libraries/wui-js/environment/web/wui-environment-0.3.js"></script>
 </head>
 <body>
 	<script>
@@ -913,7 +915,7 @@ Static members of the `WUIEnvironment` class.
 ```
 
 > [!NOTE]
-> The `src` path is relative to the HTML file. For Android, assets are loaded from `app/src/main/assets/`; for iOS, from the `assets/` folder added to the Xcode target. The recommended path `libraries/wui-js/environment/web/wui-environment-0.2.js` matches the structure described in the installation steps.
+> The `src` path is relative to the HTML file. For Android, assets are loaded from `app/src/main/assets/`; for iOS, from the `assets/` folder added to the Xcode target. The recommended path `libraries/wui-js/environment/web/wui-environment-0.3.js` matches the structure described in the installation steps.
 
 **Bridge behavior by platform:**
 

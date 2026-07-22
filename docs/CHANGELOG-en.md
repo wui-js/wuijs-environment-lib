@@ -7,6 +7,24 @@
 
 # Change Log
 
+## [v0.5.0] - 2026-07-20
+
+Features:
+
+- Synchronized the versions of the Java, Swift, and JavaScript libraries.
+1. **Web** - Updated the JavaScript library to version `0.3`.
+	- Improved detection of `#systemName` in the constructor for reliable cross-platform results. iOS/Android are now detected via `userAgent` (fixes iPad on iOS 13+ reporting `platform = "MacIntel"`); `#platform` is normalized to lowercase before matching desktop platforms (`macOS`, `Windows Phone`, `Windows`, `Linux`).
+	- Improved detection of permission status for contacts in the `getPermissionsStatus()` method.
+	- Fixed typo in `isLocal()`: was calling `isLocalagent()` instead of `isLocalAgent()`.
+	- Added `isLocalAgent()` method: returns `true` when the environment is `local.android` or `local.ios`.
+	- Added `isLocalHost()` method: returns `true` when `location.hostname` is `localhost` or `127.0.0.1`.
+	- Forced camelCase naming for acronym in public method: `openURL()` → `openUrl()`.
+2. **Android** - Updated the Java library to version `0.5`.
+	- Forced camelCase naming for acronym in public method: `openURL()` → `openUrl()`. Also updated the internal JS↔native RPC protocol string (`func: "openURL"` → `func: "openUrl"`) to keep parity with the Web layer change.
+	- Forced camelCase naming for acronyms in private methods: `getDeviceID()` → `getDeviceId()`, `getDeviceUUID()` → `getDeviceUuid()`.
+3. **iOS** - Updated the Swift library to version `0.5`.
+	- Forced camelCase naming for acronym in public method: `openURL(url:)` → `openUrl(url:)`. Also updated the internal JS↔native RPC protocol string (`case "openURL"` → `case "openUrl"`) to keep parity with Android and the Web layer.
+
 ## [v0.4.0] - 2026-05-14
 
 Features:
@@ -50,14 +68,16 @@ Features:
 
 Features:
 
-1. Updated `getDisplayInfo()` method.
-	- Added `statusbarOverlay` key:
-		- **Android**: `true` when content renders behind the status bar. Detected via `FLAG_TRANSLUCENT_STATUS`, `FLAG_LAYOUT_NO_LIMITS`, or a status bar color with alpha < 255. Covers OEM devices (e.g. C2250) that apply a transparent status bar without setting the classic translucent flag.
-		- **iOS**: `true` when no opaque UIView covers the status bar area (`statusbarTransparent`) or when `safeAreaInsets.top` is zero (no visible status bar).
-	- Added `navigationbarOverlay` key:
-		- **Android**: `true` when content renders behind the navigation bar. Detected via `FLAG_TRANSLUCENT_NAVIGATION`, `FLAG_LAYOUT_NO_LIMITS`, or a navigation bar color with alpha < 255. Covers OEM devices (e.g. C2250) that apply semi-transparent overlay bars without setting the classic translucent flag.
-		- **iOS**: `true` when no opaque UIView covers the navigation area (`navigationbarTransparent`) or when `safeAreaInsets.bottom` is zero (devices with home button or landscape without gesture bar).
-2. Updated to force boolean return type for `isLocal()`, `isMobile()` and `isTouch()` methods in the JS library.
+1. **Android** - Updated `getDisplayInfo()` method.
+	- Added `statusbarOverlay` key: `true` when content renders behind the status bar. Detected via `FLAG_TRANSLUCENT_STATUS`, `FLAG_LAYOUT_NO_LIMITS`, or a status bar color with alpha < 255. Covers OEM devices (e.g. C2250) that apply a transparent status bar without setting the classic translucent flag.
+	- Added `navigationbarOverlay` key: `true` when content renders behind the navigation bar. Detected via `FLAG_TRANSLUCENT_NAVIGATION`, `FLAG_LAYOUT_NO_LIMITS`, or a navigation bar color with alpha < 255. Covers OEM devices (e.g. C2250) that apply semi-transparent overlay bars without setting the classic translucent flag.
+
+2. **iOS** - Updated `getDisplayInfo()` method.
+	- Added `statusbarOverlay` key: `true` when no opaque UIView covers the status bar area (`statusbarTransparent`) or when `safeAreaInsets.top` is zero (no visible status bar).
+	- Added `navigationbarOverlay` key: `true` when no opaque UIView covers the navigation area (`navigationbarTransparent`) or when `safeAreaInsets.bottom` is zero (devices with home button or landscape without gesture bar).
+
+3. **Web** - Updated `getDisplayInfo()` method.
+	- Force boolean return type for `isLocal()`, `isMobile()` and `isTouch()` methods.
 
 ## [v0.1.0] - 2026-04-25
 

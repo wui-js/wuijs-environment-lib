@@ -7,6 +7,24 @@
 
 # Registro de Cambios
 
+## [v0.5.0] - 2026-07-20
+
+Características:
+
+- Se sincronizó la versión de las librerías Java, Swift y JavaScript.
+1. **Web** - Se actualizó la librería JavaScript a la versión `0.5`.
+	- Mejora en la detección de `#systemName` en el constructor para resultados confiables multiplataforma. iOS/Android ahora se detectan mediante `userAgent` (corrige el caso de iPad en iOS 13+ que reporta `platform = "MacIntel"`); `#platform` se normaliza a minúsculas antes de hacer match con plataformas de escritorio (`macOS`, `Windows Phone`, `Windows`, `Linux`).
+	- Mejora en la detección del estado del permiso para contactos en el método `getPermissionsStatus()`.
+	- Corregido error tipográfico en `isLocal()`: llamaba a `isLocalagent()` en lugar de `isLocalAgent()`.
+	- Agregado método `isLocalAgent()`: devuelve `true` cuando el entorno es `local.android` o `local.ios`.
+	- Agregado método `isLocalHost()`: devuelve `true` cuando `location.hostname` es `localhost` o `127.0.0.1`.
+	- Se forzó nomenclatura camelCase en siglas de método público: `openURL()` → `openUrl()`.
+2. **Android** - Se actualizó la librería Java a la versión `0.5`.
+	- Se forzó nomenclatura camelCase en siglas de método público: `openURL()` → `openUrl()`. Se actualizó también la cadena del protocolo interno de RPC JS↔nativo (`func: "openURL"` → `func: "openUrl"`) para mantener paridad con el cambio en la capa Web.
+	- Se forzó nomenclatura camelCase en siglas de métodos privados: `getDeviceID()` → `getDeviceId()`, `getDeviceUUID()` → `getDeviceUuid()`.
+3. **iOS** - Se actualizó la librería Swift a la versión `0.5`.
+	- Se forzó nomenclatura camelCase en siglas de método público: `openURL(url:)` → `openUrl(url:)`. Se actualizó también la cadena del protocolo interno de RPC JS↔nativo (`case "openURL"` → `case "openUrl"`) para mantener paridad con Android y la capa Web.
+
 ## [v0.4.0] - 2026-05-14
 
 Características:
@@ -50,14 +68,16 @@ Características:
 
 Características:
 
-1. Se actualizó el método `getDisplayInfo()`.
-	- Se agregó la clave `statusbarOverlay`:
-		- **Android**: `true` cuando el contenido se renderiza detrás de la barra de estado. Se detecta mediante `FLAG_TRANSLUCENT_STATUS`, `FLAG_LAYOUT_NO_LIMITS`, o un color de barra de estado con alpha < 255. Cubre dispositivos OEM (ej. C2250) que aplican barra de estado transparente sin activar el flag clásico translúcido.
-		- **iOS**: `true` cuando no hay ninguna UIView opaca cubriendo la barra de estado (`statusbarTransparent`) o cuando `safeAreaInsets.top` es cero (sin barra de estado visible).
-	- Se agregó la clave `navigationbarOverlay`:
-		- **Android**: `true` cuando el contenido se renderiza detrás de la barra de navegación. Se detecta mediante `FLAG_TRANSLUCENT_NAVIGATION`, `FLAG_LAYOUT_NO_LIMITS`, o un color de barra de navegación con alpha < 255. Cubre dispositivos OEM (ej. C2250) que aplican barra semitransparente en modo overlay sin activar el flag clásico translúcido.
-		- **iOS**: `true` cuando no hay ninguna UIView opaca cubriendo el área de navegación (`navigationbarTransparent`) o cuando `safeAreaInsets.bottom` es cero (dispositivos con botón de inicio o landscape sin barra de gestos).
-2. Se actualió forzó la salida de tipo boleeana de los métodos `isLocal()`, `isMobile()` y `isTouch()` en la librería JS.
+1. **Android** - Se actualizó el método `getDisplayInfo()`.
+	- Se agregó la clave `statusbarOverlay`: `true` cuando el contenido se renderiza detrás de la barra de estado. Se detecta mediante `FLAG_TRANSLUCENT_STATUS`, `FLAG_LAYOUT_NO_LIMITS`, o un color de barra de estado con alpha < 255. Cubre dispositivos OEM (ej. C2250) que aplican barra de estado transparente sin activar el flag clásico translúcido.
+	- Se agregó la clave `navigationbarOverlay`: `true` cuando el contenido se renderiza detrás de la barra de navegación. Se detecta mediante `FLAG_TRANSLUCENT_NAVIGATION`, `FLAG_LAYOUT_NO_LIMITS`, o un color de barra de navegación con alpha < 255. Cubre dispositivos OEM (ej. C2250) que aplican barra semitransparente en modo overlay sin activar el flag clásico translúcido.
+
+2. **iOS** - Se actualizó el método `getDisplayInfo()`.
+	- Se agregó la clave `statusbarOverlay`: `true` cuando no hay ninguna UIView opaca cubriendo la barra de estado (`statusbarTransparent`) o cuando `safeAreaInsets.top` es cero (sin barra de estado visible).
+	- Se agregó la clave `navigationbarOverlay`: `true` cuando no hay ninguna UIView opaca cubriendo el área de navegación (`navigationbarTransparent`) o cuando `safeAreaInsets.bottom` es cero (dispositivos con botón de inicio o landscape sin barra de gestos).
+
+3. **Web** - Se actualizó el método `getDisplayInfo()`.
+	- Se forzó la salida de tipo booleano en los métodos `isLocal()`, `isMobile()` e `isTouch()`.
 
 ## [v0.1.0] - 2026-04-25
 

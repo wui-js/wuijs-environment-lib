@@ -1,7 +1,7 @@
 /*
  * @file WUIEnvironment.swift
  * @class WUIEnvironment
- * @version 0.5
+ * @version 0.3
  * @author Sergio E. Belmar V. (wuijs.project@gmail.com)
  * @copyright Sergio E. Belmar V. (wuijs.project@gmail.com)
  */
@@ -521,10 +521,10 @@ class WUIEnvironment: NSObject {
 		}
 	}
 
-	func openUrl(url: String) {
+	func openURL(url: String) {
 		DispatchQueue.main.async { [weak self] in
 			guard let self = self else { return }
-			self.log("openUrl requested: \(url)")
+			self.log("openURL requested: \(url)")
 			if url.hasPrefix("file://"), let rawURL = URL(string: url) {
 				// file:/// + /absolute/path produces file:////path (4 slashes); strip extra leading slashes.
 				var cleanPath = rawURL.path
@@ -768,8 +768,8 @@ extension WUIEnvironment: WKScriptMessageHandler {
 			case "openAppSettings":
 				openAppSettings()
 				push("null")
-			case "openUrl":
-				if let url = json["url"] as? String { openUrl(url: url) }
+			case "openURL":
+				if let url = json["url"] as? String { openURL(url: url) }
 				push("null")
 			case "readDeepLink":
 				push(readDeepLink() as Any)

@@ -1,7 +1,7 @@
 /*
  * @file WUIEnvironment.java
  * @class WUIEnvironment
- * @version 0.5
+ * @version 0.4
  * @author Sergio E. Belmar V. (wuijs.project@gmail.com)
  * @copyright Sergio E. Belmar V. (wuijs.project@gmail.com)
  */
@@ -506,7 +506,7 @@ public class WUIEnvironment {
 	}
 
 	@SuppressLint("HardwareIds")
-	private String getDeviceId() {
+	private String getDeviceID() {
 		String deviceId = Settings.Secure.getString(activity.getContentResolver(), Settings.Secure.ANDROID_ID);
 		if (deviceId != null && !deviceId.equals("9774d56d682e549c")) {
 			return deviceId;
@@ -514,11 +514,11 @@ public class WUIEnvironment {
 		return "";
 	}
 
-	private String getDeviceUuid() {
-		String deviceId = this.getDeviceId();
+	private String getDeviceUUID() {
+		String deviceId = this.getDeviceID();
 		if (!deviceId.isEmpty()) {
-			UUID deviceUuid = UUID.nameUUIDFromBytes(deviceId.getBytes());
-			return deviceUuid.toString();
+			UUID deviceUUID = UUID.nameUUIDFromBytes(deviceId.getBytes());
+			return deviceUUID.toString();
 		}
 		return "";
 	}
@@ -546,8 +546,8 @@ public class WUIEnvironment {
 	public JSONObject getDeviceInfo() {
 		JSONObject deviceInfo = new JSONObject();
 		try {
-			deviceInfo.put("id", this.getDeviceId());
-			deviceInfo.put("uuid", this.getDeviceUuid());
+			deviceInfo.put("id", this.getDeviceID());
+			deviceInfo.put("uuid", this.getDeviceUUID());
 			deviceInfo.put("name", this.getDeviceName());
 			deviceInfo.put("platform", "Android");
 			deviceInfo.put("version", Build.VERSION.RELEASE);
@@ -967,8 +967,8 @@ public class WUIEnvironment {
 		activity.startActivity(intent);
 	}
 
-	public void openUrl(final String url) {
-		log("i", "openUrl requested: " + url);
+	public void openURL(final String url) {
+		log("i", "openURL requested: " + url);
 		if (url.startsWith("file:///android_asset/")) {
 			String assetPath = url.replace("file:///android_asset/", "");
 			try {
@@ -1095,13 +1095,13 @@ public class WUIEnvironment {
 					func.equals("removeFile") && removeFile(arguments.get("name").toString()) ? "true" :
 					func.equals("requestPermission") && requestPermissionSync(arguments.get("type").toString()) ? "true" :
 					"false";
-			} else if (func.matches("^(setStatusbarStyle|setNavigationbarStyle|setAppBadge|openAppSettings|openUrl|clearDeepLink|log)$")) {
+			} else if (func.matches("^(setStatusbarStyle|setNavigationbarStyle|setAppBadge|openAppSettings|openURL|clearDeepLink|log)$")) {
 				switch (func) {
 					case "setStatusbarStyle": setStatusbarStyle(arguments.get("color").toString(), (Boolean) arguments.get("darkIcons")); break;
 					case "setNavigationbarStyle": setNavigationbarStyle(arguments.get("color").toString(), (Boolean) arguments.get("darkIcons")); break;
 					case "setAppBadge": setAppBadge(arguments.getInt("number")); break;
 					case "openAppSettings": openAppSettings(); break;
-					case "openUrl": openUrl(arguments.get("url").toString()); break;
+					case "openURL": openURL(arguments.get("url").toString()); break;
 					case "clearDeepLink": clearDeepLink(); break;
 					case "log": log(arguments.get("message").toString(), arguments.optBoolean("force", false)); break;
 				}
