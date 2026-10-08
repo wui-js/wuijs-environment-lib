@@ -1,7 +1,7 @@
 /*
  * @file WUIEnvironment.java
  * @class WUIEnvironment
- * @version 0.5
+ * @version 0.6
  * @author Sergio E. Belmar V. (wuijs.project@gmail.com)
  * @copyright Sergio E. Belmar V. (wuijs.project@gmail.com)
  */
@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.MediaScannerConnection;
@@ -96,6 +97,11 @@ public class WUIEnvironment {
 	private Uri cameraOutputUri = null;
 	private ActivityResultLauncher<Intent> fileChooserLauncher;
 	private ActivityResultLauncher<Intent> cameraLauncher;
+	private final long downloadProgressInterval = 250;
+	private volatile boolean downloadCancelled = false;
+	private final Object downloadLock = new Object();
+	private final Map<Long, String> activeDownloads = new HashMap<>();
+	private final java.util.Set<Long> cancelledDownloads = new java.util.HashSet<>();
 
 	// Initialization
 
@@ -152,6 +158,7 @@ public class WUIEnvironment {
 	@SuppressLint("SetJavaScriptEnabled")
 	private void setupWebViewSettings() throws JSONException {
 		JSONObject appInfo = getAppInfo();
+		WebView.setWebContentsDebuggingEnabled(developMode);
 		WebSettings webSettings = webView.getSettings();
 		webSettings.setUserAgentString(webSettings.getUserAgentString()+" "+className+" ("+appInfo.get("name")+"/"+appInfo.get("version")+")");
 		webSettings.setJavaScriptEnabled(true);
@@ -347,60 +354,14 @@ public class WUIEnvironment {
 
 	private void setupDownloadHandler() {
 		webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
-			String filename = "";
-			File downloadFile = null;
-			boolean downloaded = false;
 			log("d", "Start download '"+url+"'");
 			if (url.startsWith("file:///android_asset/")) {
-				try {
-					String assetPath = url.replace("file:///android_asset/", "");
-					File sourceFile = new File(activity.getCacheDir(), assetPath);
-					if (!sourceFile.exists()) {
-						File sourceParent = sourceFile.getParentFile();
-						if (sourceParent != null && !sourceParent.exists() && !sourceParent.mkdirs()) {
-							log("w", "Could not create cache directory: " + sourceParent.getAbsolutePath());
-						}
-						try (java.io.InputStream in = context.getAssets().open(assetPath);
-							java.io.FileOutputStream out = new java.io.FileOutputStream(sourceFile)) {
-							byte[] buffer = new byte[1024];
-							int len;
-							while ((len = in.read(buffer)) != -1) {
-								out.write(buffer, 0, len);
-							}
-						}
-					}
-					if (sourceFile.exists()) {
-						File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-						if (!downloadsDir.exists() && !downloadsDir.mkdirs()) {
-							log("w", "Could not create downloads directory");
-						}
-						filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
-						downloadFile = new File(downloadsDir, filename);
-						int version = 1;
-						while (downloadFile.exists()) {
-							String nameWithoutExt = filename.replaceFirst("[.][^.]+$", "");
-							String extension = filename.substring(filename.lastIndexOf('.'));
-							downloadFile = new File(downloadsDir, nameWithoutExt + " (" + version + ")" + extension);
-							version++;
-						}
-						try (java.io.FileInputStream in = new java.io.FileInputStream(sourceFile);
-							java.io.FileOutputStream out = new java.io.FileOutputStream(downloadFile)) {
-							byte[] buffer = new byte[1024];
-							int len;
-							while ((len = in.read(buffer)) != -1) {
-								out.write(buffer, 0, len);
-							}
-						}
-						log("i", "Asset file downloaded to: " + downloadFile.getAbsolutePath());
-						downloaded = true;
-					}
-				} catch (Exception e) {
-					log("e", "Error downloading asset file: " + e.getMessage());
-				}
+				downloadCancelled = false;
+				new Thread(() -> downloadAssetFile(url, contentDisposition, mimetype)).start();
 			} else {
-				filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
+				String filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
 				File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-				downloadFile = new File(downloadsDir, filename);
+				File downloadFile = new File(downloadsDir, filename);
 				DownloadManager downloadManager = (DownloadManager) activity.getSystemService(Context.DOWNLOAD_SERVICE);
 				DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
 				request.setTitle(filename);
@@ -408,32 +369,198 @@ public class WUIEnvironment {
 				request.allowScanningByMediaScanner();
 				request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 				request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename);
-				downloadManager.enqueue(request);
-				downloaded = true;
+				long id = downloadManager.enqueue(request);
+				registerDownload(id, null);
+				new Thread(() -> trackDownload(downloadManager, id, null, filename, mimetype, downloadFile)).start();
 			}
-			if (downloaded) {
-				MediaScannerConnection.scanFile(context, new String[]{downloadFile.getAbsolutePath()}, null, null);
+		});
+	}
+
+	private void downloadAssetFile(String url, String contentDisposition, String mimetype) {
+		try {
+			String assetPath = url.replace("file:///android_asset/", "");
+			File sourceFile = new File(activity.getCacheDir(), assetPath);
+			if (!sourceFile.exists()) {
+				File sourceParent = sourceFile.getParentFile();
+				if (sourceParent != null && !sourceParent.exists() && !sourceParent.mkdirs()) {
+					log("w", "Could not create cache directory: " + sourceParent.getAbsolutePath());
+				}
+				try (java.io.InputStream in = context.getAssets().open(assetPath);
+					java.io.FileOutputStream out = new java.io.FileOutputStream(sourceFile)) {
+					byte[] buffer = new byte[1024];
+					int len;
+					while ((len = in.read(buffer)) != -1) {
+						out.write(buffer, 0, len);
+					}
+				}
+			}
+			if (sourceFile.exists()) {
+				File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+				if (!downloadsDir.exists() && !downloadsDir.mkdirs()) {
+					log("w", "Could not create downloads directory");
+				}
+				String filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
+				File downloadFile = new File(downloadsDir, filename);
+				int version = 1;
+				while (downloadFile.exists()) {
+					String nameWithoutExt = filename.replaceFirst("[.][^.]+$", "");
+					String extension = filename.substring(filename.lastIndexOf('.'));
+					downloadFile = new File(downloadsDir, nameWithoutExt + " (" + version + ")" + extension);
+					version++;
+				}
+				long total = sourceFile.length();
+				long loaded = 0;
+				long lastProgressTime = 0;
+				try (java.io.FileInputStream in = new java.io.FileInputStream(sourceFile);
+					java.io.FileOutputStream out = new java.io.FileOutputStream(downloadFile)) {
+					byte[] buffer = new byte[1024];
+					int len;
+					while (!downloadCancelled && (len = in.read(buffer)) != -1) {
+						out.write(buffer, 0, len);
+						loaded += len;
+						long now = System.currentTimeMillis();
+						if (now - lastProgressTime >= downloadProgressInterval) {
+							lastProgressTime = now;
+							pushDownloadProgress(null, loaded, total);
+						}
+					}
+				}
+				if (downloadCancelled) {
+					if (!downloadFile.delete()) {
+						log("w", "Could not delete cancelled download: " + downloadFile.getAbsolutePath());
+					}
+					log("i", "Asset file download cancelled: " + filename);
+					pushDownloadFile(null, filename, mimetype, null, "cancelled");
+					return;
+				}
+				pushDownloadProgress(null, loaded, total);
+				log("i", "Asset file downloaded to: " + downloadFile.getAbsolutePath());
+				Uri contentUri = null;
+				try {
+					contentUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".provider", downloadFile);
+				} catch (IllegalArgumentException e) {
+					log("w", "Downloads directory is not declared in res/xml/file_paths.xml: " + e.getMessage());
+				}
+				finishDownload(null, mimetype, downloadFile, contentUri);
+			}
+		} catch (Exception e) {
+			log("e", "Error downloading asset file: " + e.getMessage());
+			pushDownloadFile(null, URLUtil.guessFileName(url, contentDisposition, mimetype), mimetype, null, "failed");
+		}
+	}
+
+	private void trackDownload(DownloadManager downloadManager, long id, String key, String filename, String mimetype, File downloadFile) {
+		DownloadManager.Query query = new DownloadManager.Query().setFilterById(id);
+		boolean running = true;
+		while (running) {
+			try (Cursor cursor = downloadManager.query(query)) {
+				if (cursor == null || !cursor.moveToFirst()) {
+					boolean cancelled;
+					synchronized (downloadLock) {
+						cancelled = cancelledDownloads.contains(id);
+					}
+					log("i", "Download removed: " + filename);
+					pushDownloadFile(key, filename, mimetype, null, cancelled ? "cancelled" : "failed");
+					running = false;
+				} else {
+					int status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+					long loaded = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+					long total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+					pushDownloadProgress(key, loaded, total);
+					if (status == DownloadManager.STATUS_SUCCESSFUL) {
+						String localUri = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI));
+						String localPath = localUri != null ? Uri.parse(localUri).getPath() : null;
+						String mediaType = mimetype != null ? mimetype : cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_MEDIA_TYPE));
+						unregisterDownload(id);
+						log("i", "File downloaded: " + filename);
+						finishDownload(key, mediaType, localPath != null ? new File(localPath) : downloadFile, downloadManager.getUriForDownloadedFile(id));
+						running = false;
+					} else if (status == DownloadManager.STATUS_FAILED) {
+						int reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON));
+						Integer httpStatus = reason >= 100 && reason < 1000 ? reason : null;
+						log("e", "Download failed: " + filename + " (reason " + reason + ")");
+						pushDownloadFile(key, filename, mimetype, null, "failed", httpStatus);
+						running = false;
+					}
+				}
+			} catch (Exception e) {
+				log("e", "Error tracking download: " + e.getMessage());
+				pushDownloadFile(key, filename, mimetype, null, "failed");
+				running = false;
+			}
+			if (running) {
+				try {
+					Thread.sleep(downloadProgressInterval);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					running = false;
+				}
+			}
+		}
+		unregisterDownload(id);
+	}
+
+	private void registerDownload(long id, String key) {
+		synchronized (downloadLock) {
+			activeDownloads.put(id, key);
+		}
+	}
+
+	private void unregisterDownload(long id) {
+		synchronized (downloadLock) {
+			activeDownloads.remove(id);
+			cancelledDownloads.remove(id);
+		}
+	}
+
+	private void finishDownload(String key, String mimetype, File downloadFile, Uri contentUri) {
+		MediaScannerConnection.scanFile(context, new String[]{downloadFile.getAbsolutePath()}, null, null);
+		if (contentUri != null) {
+			activity.runOnUiThread(() -> {
 				Intent openIntent = new Intent(Intent.ACTION_VIEW);
-				Uri uri = Uri.fromFile(downloadFile);
-				openIntent.setDataAndType(uri, mimetype != null && !mimetype.isEmpty() ? mimetype : "application/octet-stream");
-				openIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				openIntent.setDataAndType(contentUri, mimetype != null && !mimetype.isEmpty() ? mimetype : "application/octet-stream");
+				openIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
 				try {
 					context.startActivity(openIntent);
 				} catch (Exception e) {
 					log("e", "No app found to open the file: " + e.getMessage());
 				}
-				try {
-					JSONObject arguments = new JSONObject();
-					arguments.put("event", "onDownloadFile");
-					arguments.put("filename", filename);
-					arguments.put("mimetype", mimetype);
-					arguments.put("uri", uri.toString());
-					pushJavascript(arguments);
-				} catch (JSONException e) {
-					throw new RuntimeException(e);
-				}
-			}
-		});
+			});
+		}
+		pushDownloadFile(key, downloadFile.getName(), mimetype, Uri.fromFile(downloadFile).toString(), "success");
+	}
+
+	private void pushDownloadFile(String key, String filename, String mimetype, String uri, String status) {
+		pushDownloadFile(key, filename, mimetype, uri, status, null);
+	}
+
+	private void pushDownloadFile(String key, String filename, String mimetype, String uri, String status, Integer httpStatus) {
+		try {
+			JSONObject arguments = new JSONObject();
+			arguments.put("event", "onDownloadFile");
+			arguments.put("key", key != null ? key : JSONObject.NULL);
+			arguments.put("filename", filename);
+			arguments.put("mimetype", mimetype != null ? mimetype : "");
+			arguments.put("uri", uri != null ? uri : JSONObject.NULL);
+			arguments.put("status", status);
+			arguments.put("httpStatus", httpStatus != null ? httpStatus : JSONObject.NULL);
+			pushJavascript(arguments);
+		} catch (JSONException e) {
+			log("e", "Error sending download result: " + e.getMessage());
+		}
+	}
+
+	private void pushDownloadProgress(String key, long loaded, long total) {
+		try {
+			JSONObject arguments = new JSONObject();
+			arguments.put("event", "onDownloadProgress");
+			arguments.put("key", key != null ? key : JSONObject.NULL);
+			arguments.put("loaded", loaded);
+			arguments.put("total", total > 0 ? total : -1);
+			pushJavascript(arguments);
+		} catch (JSONException e) {
+			log("e", "Error sending download progress: " + e.getMessage());
+		}
 	}
 
 	// Native bridge functions
@@ -1021,6 +1148,84 @@ public class WUIEnvironment {
 		deepLinkURL = null;
 	}
 
+	public void downloadFile(String url, String filename, JSONObject headers) {
+		downloadFile(url, filename, headers, null);
+	}
+
+	public void downloadFile(String url, String filename, JSONObject headers, String key) {
+		String name = filename != null && !filename.isEmpty() ? filename : URLUtil.guessFileName(url, null, null);
+		try {
+			File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+			File downloadFile = new File(downloadsDir, name);
+			DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+			DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+			int headersCount = 0;
+			if (headers != null) {
+				java.util.Iterator<String> headerNames = headers.keys();
+				while (headerNames.hasNext()) {
+					String headerName = headerNames.next();
+					request.addRequestHeader(headerName, headers.optString(headerName));
+					headersCount++;
+				}
+			}
+			request.setTitle(name);
+			request.allowScanningByMediaScanner();
+			request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+			request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name);
+			log("d", "Start download '" + url + "' with " + headersCount + " headers");
+			long id = downloadManager.enqueue(request);
+			registerDownload(id, key);
+			new Thread(() -> trackDownload(downloadManager, id, key, name, null, downloadFile)).start();
+		} catch (Exception e) {
+			log("e", "Error starting download: " + e.getMessage());
+			pushDownloadFile(key, name, "", null, "failed");
+		}
+	}
+
+	public void cancelDownload() {
+		cancelDownload(null);
+	}
+
+	public void cancelDownload(String key) {
+		boolean all = key == null || key.isEmpty();
+		java.util.List<Long> ids = new java.util.ArrayList<>();
+		synchronized (downloadLock) {
+			if (all) {
+				downloadCancelled = true;
+			}
+			for (Map.Entry<Long, String> entry : activeDownloads.entrySet()) {
+				if (all || key.equals(entry.getValue())) {
+					ids.add(entry.getKey());
+				}
+			}
+			for (Long id : ids) {
+				activeDownloads.remove(id);
+				cancelledDownloads.add(id);
+			}
+		}
+		if (ids.isEmpty()) {
+			return;
+		}
+		DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+		for (long id : ids) {
+			boolean successful = false;
+			try (Cursor cursor = downloadManager.query(new DownloadManager.Query().setFilterById(id))) {
+				successful = cursor != null && cursor.moveToFirst() && cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL;
+			} catch (Exception e) {
+				log("w", "Could not query download status: " + e.getMessage());
+			}
+			if (successful) {
+				synchronized (downloadLock) {
+					cancelledDownloads.remove(id);
+				}
+				log("i", "Download already completed, not cancelled");
+			} else {
+				downloadManager.remove(id);
+				log("i", "Download cancelled");
+			}
+		}
+	}
+
 	public void log(String message) {
 		log(message, false);
 	}
@@ -1095,7 +1300,7 @@ public class WUIEnvironment {
 					func.equals("removeFile") && removeFile(arguments.get("name").toString()) ? "true" :
 					func.equals("requestPermission") && requestPermissionSync(arguments.get("type").toString()) ? "true" :
 					"false";
-			} else if (func.matches("^(setStatusbarStyle|setNavigationbarStyle|setAppBadge|openAppSettings|openUrl|clearDeepLink|log)$")) {
+			} else if (func.matches("^(setStatusbarStyle|setNavigationbarStyle|setAppBadge|openAppSettings|openUrl|clearDeepLink|downloadFile|cancelDownload|log)$")) {
 				switch (func) {
 					case "setStatusbarStyle": setStatusbarStyle(arguments.get("color").toString(), (Boolean) arguments.get("darkIcons")); break;
 					case "setNavigationbarStyle": setNavigationbarStyle(arguments.get("color").toString(), (Boolean) arguments.get("darkIcons")); break;
@@ -1103,6 +1308,8 @@ public class WUIEnvironment {
 					case "openAppSettings": openAppSettings(); break;
 					case "openUrl": openUrl(arguments.get("url").toString()); break;
 					case "clearDeepLink": clearDeepLink(); break;
+					case "downloadFile": downloadFile(arguments.get("url").toString(), arguments.optString("filename", ""), arguments.optJSONObject("headers"), arguments.isNull("key") ? null : arguments.optString("key")); break;
+					case "cancelDownload": cancelDownload(arguments.isNull("key") ? null : arguments.optString("key")); break;
 					case "log": log(arguments.get("message").toString(), arguments.optBoolean("force", false)); break;
 				}
 				return "null";

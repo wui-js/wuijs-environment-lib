@@ -14,9 +14,9 @@
 |                      | |
 | -------------------- | ----------- |
 | **Library name**     | `wuijs-environment-lib` |
-| **Library version**  | `0.5.1` ([Change Log](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-en.md)) |
+| **Library version**  | `0.6.0` ([Change Log](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-en.md)) |
 | **NPM package**      | `@wui-js/environment` ([npm](https://www.npmjs.com/package/@wui-js/environment)) |
-| **Document version** | `0.5.1.20260908.0` |
+| **Document version** | `0.6.0.20261008.0` |
 | **License**          | `Apache License 2.0` |
 | **Author**           | `Sergio E. Belmar V. <wuijs.project@gmail.com>` |
 | **Repository**       | [https://github.com/wui-js/wuijs-environment-lib](https://github.com/wui-js/wuijs-environment-lib) |
@@ -31,6 +31,7 @@
 *   [Quick Start](#quickstart)
 	*   [Android + Web](#quickstart-android)
 	*   [iOS + Web](#quickstart-ios)
+	*   [App Templates](#quickstart-templates)
 *   [Android Library](#android)
 	*   [Java Constructor](#android-constructor)
 	*   [Java Methods](#android-methods)
@@ -103,13 +104,17 @@ wuijs-environment-lib/
 ├── legacy/
 │   └── wui-js/
 │       └── environment/
-└── src/
-    └── wui-js/
-        └── environment/
-            ├── android/
-            ├── ios/
-            ├── web/
-            └── demo/
+├── src/
+│   └── wui-js/
+│       └── environment/
+│           ├── android/
+│           ├── ios/
+│           ├── web/
+│           └── demo/
+├── templates/
+│   ├── app.myapp.android/
+│   └── app.myapp.ios/
+└── tools/
 ```
 
 | Path                                                                                                                        | Description |
@@ -126,6 +131,10 @@ wuijs-environment-lib/
 | [src/wui-js/environment/ios](https://github.com/wui-js/wuijs-environment-lib/tree/main/src/wui-js/environment/ios/)         | WUI/JS Environment library for iOS. |
 | [src/wui-js/environment/web](https://github.com/wui-js/wuijs-environment-lib/tree/main/src/wui-js/environment/web/)         | WUI/JS Environment library for Web. |
 | [src/wui-js/environment/demo](https://github.com/wui-js/wuijs-environment-lib/tree/main/src/wui-js/environment/demo/)       | Directory with the demo interface for Android and iOS environments. |
+| [templates](https://github.com/wui-js/wuijs-environment-lib/tree/main/templates/)                                           | Minimal Android Studio and Xcode projects that run the demo page with the latest version of the library. |
+| [templates/app.myapp.android](https://github.com/wui-js/wuijs-environment-lib/tree/main/templates/app.myapp.android/)       | Android template (Java, Gradle). |
+| [templates/app.myapp.ios](https://github.com/wui-js/wuijs-environment-lib/tree/main/templates/app.myapp.ios/)               | iOS template (Swift, SwiftUI). |
+| [tools](https://github.com/wui-js/wuijs-environment-lib/tree/main/tools/)                                                   | Maintenance scripts (`sync-templates.sh` copies the current sources into the templates). |
 
 > [!NOTE]
 > The `wuijs-environment-lib` library operates jointly, meaning the **Android + Web** or **iOS + Web** combination must be implemented for it to work correctly.
@@ -134,9 +143,9 @@ wuijs-environment-lib/
 
 | Type  | Version | File |
 | ----- | :------:| ---- |
-| Java  | 0.4     | [src/wui-js/environment/android/WUIEnvironment.java](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/android/WUIEnvironment.java) |
-| Swift | 0.3     | [src/wui-js/environment/ios/WUIEnvironment.swift](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/ios/WUIEnvironment.swift) |
-| JS    | 0.3     | [src/wui-js/environment/web/wui-environment-0.3.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.3.js) |
+| Java  | 0.6     | [src/wui-js/environment/android/WUIEnvironment.java](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/android/WUIEnvironment.java) |
+| Swift | 0.6     | [src/wui-js/environment/ios/WUIEnvironment.swift](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/ios/WUIEnvironment.swift) |
+| JS    | 0.6     | [src/wui-js/environment/web/wui-environment-0.6.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.6.js) |
 
 <a name="quickstart"></a>
 
@@ -164,7 +173,7 @@ wuiEnvironment.saveDeepLink(getIntent());
 5. In your own HTML pages, include the JS class and instantiate it:
 
 ```html
-<script src="libraries/wui-js/environment/web/wui-environment-0.3.js"></script>
+<script src="libraries/wui-js/environment/web/wui-environment-0.6.js"></script>
 <script>
 	const env = new WUIEnvironment();
 	env.getDeviceInfo(function(info) {
@@ -192,7 +201,7 @@ wuiEnvironment?.openUrl(url: Bundle.main.bundleURL.appendingPathComponent("asset
 5. In your own HTML pages, include the JS class and instantiate it:
 
 ```html
-<script src="libraries/wui-js/environment/web/wui-environment-0.3.js"></script>
+<script src="libraries/wui-js/environment/web/wui-environment-0.6.js"></script>
 <script>
 	const env = new WUIEnvironment();
 	env.getDeviceInfo(function(info) {
@@ -204,11 +213,24 @@ wuiEnvironment?.openUrl(url: Bundle.main.bundleURL.appendingPathComponent("asset
 > [!NOTE]
 > Open the demo page first (`demo/index.html`) to verify the bridge works before switching to your production HTML.
 
+<a name="quickstart-templates"></a>
+
+### App Templates
+
+The [templates](https://github.com/wui-js/wuijs-environment-lib/tree/main/templates/) directory contains two minimal projects that load the demo page (`src/wui-js/environment/demo/index.html`) with the latest version of the library already integrated:
+
+| Template | Opens with | Package / Bundle ID | Requirements |
+| -------- | ---------- | ------------------- | ------------ |
+| `app.myapp.android` | Android Studio | `app.myapp` | Android SDK 36, JDK 17+ (the one bundled with Android Studio), minSdk 24. |
+| `app.myapp.ios` | Xcode (`MyApp.xcodeproj`) | `app.myapp` | Xcode 16+, iOS 18.5+. |
+
+They are meant as a starting point for a new hybrid app: they contain only the bridge class, the JavaScript class, the demo page, the WUI/JS logo as app icon and the required configuration (colors, permissions, `FileProvider`, Deep Link scheme `myapp`). See [templates/README.md](https://github.com/wui-js/wuijs-environment-lib/blob/main/templates/README.md) for the steps to rename them.
+
 <a name="android"></a>
 
 ## Android Library
 
-Version: `0.4`
+Version: `0.6`
 
 The Android library uses **WebView** as its rendering engine.
 
@@ -224,35 +246,38 @@ The Android library uses **WebView** as its rendering engine.
 
 | Constructor | Description |
 | ----------- | ----------- |
-| `WUIEnvironment(Context context[, boolean developMode])` | Initializes the WUI environment with default settings. `developMode = true` allows SSL with untrusted certificates and enables debug logging. **Do not use `true` in production** — it disables certificate validation for the entire WebView. |
+| `WUIEnvironment(Context context[, boolean developMode])` | Initializes the WUI environment with default settings. `developMode = true` allows SSL with untrusted certificates, enables debug logging and enables WebView inspection with Chrome DevTools (`chrome://inspect`). **Do not use `true` in production** — it disables certificate validation for the entire WebView. |
 
 <a name="android-methods"></a>
 
 ### Java Methods
 
-| Method                  | Return type  | Description |
-| ----------------------- | ------------ | ----------- |
-| `requestPermission`     | `void`       | `requestPermission(type, callback)`<br><br>Arguments:<br>**• type:** `String`, one of `location`, `notifications`, `camera`, `contacts`, `storage`.<br>**• callback:** `Consumer<Boolean>`, invoked with the result.<br><br>Requests the system permission for the given type. If already granted, invokes the callback immediately. If permanently denied (`don't ask again`), returns `false` without showing the dialog. On Android < 13, `notifications` always resolves to `true`. Delegates the OS callback through `MainActivity.onRequestPermissionsResult` → `handlePermissionResult(...)`. |
-| `isAppInForeground`     | `boolean`    | `isAppInForeground()`<br><br>Checks whether the application is currently in the foreground. |
-| `getDeviceInfo`         | `JSONObject` | `getDeviceInfo()`<br><br>Returns device hardware information: `id`, `uuid`, `name`, `platform`, `version`, `maker`, `model`. |
-| `getDisplayInfo`        | `JSONObject` | `getDisplayInfo()`<br><br>Returns screen metrics: `width`, `height`, `density`, `densityDpi`, `orientation`, `refreshRate`, `aspectRatio`, `navigationMode`, `statusbarHeight`, `navigationbarHeight`, `notch`, system bar style flags, `statusbarOverlay` (`true` when content renders behind the status bar — detected via `FLAG_TRANSLUCENT_STATUS`, `FLAG_LAYOUT_NO_LIMITS`, or a status bar color with alpha < 255), and `navigationbarOverlay` (`true` when content renders behind the navigation bar — detected via `FLAG_TRANSLUCENT_NAVIGATION`, `FLAG_LAYOUT_NO_LIMITS`, or a navigation bar color with alpha < 255). |
-| `getAppInfo`            | `JSONObject` | `getAppInfo()`<br><br>Returns application metadata: `name`, `version`, `package`, `build`. |
-| `getPermissionsStatus`  | `JSONObject` | `getPermissionsStatus()`<br><br>Checks the status of system permissions: `phone`, `location`, `storage`, `contacts`, `camera`, `notifications`. Possible values: `granted`, `denied`, `default`. |
-| `getCurrentPosition`    | `JSONObject` | `getCurrentPosition()`<br><br>Obtains current GPS/Network coordinates: `latitude`, `longitude`, `accuracy`, `provider`, `timestamp`. Requests location permission if not yet granted. |
-| `getConnectionStatus`   | `boolean`    | `getConnectionStatus()`<br><br>Checks whether an active internet connection exists (WiFi, mobile data, or Ethernet). |
-| `setStatusbarStyle`     | `void`       | `setStatusbarStyle(color, darkIcons)`<br><br>Arguments:<br>**• color:** `String`, HEX color (`#RRGGBB`) or a `colors.xml` key (`statusbarLightColor`, `statusbarDarkColor`, etc.).<br>**• darkIcons:** `boolean`, `true` for dark icons, `false` for light.<br><br>Updates the color and icon style of the status bar. |
-| `setNavigationbarStyle` | `void`       | `setNavigationbarStyle(color, darkIcons)`<br><br>Arguments:<br>**• color:** `String`, HEX color (`#RRGGBB`) or a `colors.xml` key (`navigationbarLightColor`, `navigationbarDarkColor`, etc.).<br>**• darkIcons:** `boolean`, `true` for dark icons, `false` for light.<br><br>Updates the color and icon style of the navigation bar. |
-| `setAppBadge`           | `void`       | `setAppBadge(number)`<br><br>Arguments:<br>**• number:** `int`, non-negative badge count. `0` clears the badge.<br><br>Sets or clears the application icon badge using a hybrid strategy based on the device manufacturer. On OEM launchers with native badge support (Samsung, Xiaomi, Huawei, Honor, Oppo, Vivo, Sony, HTC, LG, Asus), uses `ShortcutBadger` to render the number directly on the icon without publishing a notification. On stock Pixel/AOSP launchers, falls back to a silent notification (channel `wui_badge`, `IMPORTANCE_LOW`, `setShowBadge(true)`, `setNumber(n)`, `setSilent(true)`) which produces a dot on the icon — Pixel does not render native numbers. On Android 13+ requests the `POST_NOTIFICATIONS` permission first; if denied, the call fails silently. |
-| `saveFile`              | `boolean`    | `saveFile(name, content)`<br><br>Arguments:<br>**• name:** `String`, file name.<br>**• content:** `String`, content to save.<br><br>Writes a file to the application's private internal storage. Returns `true` on success. |
-| `readFile`              | `String`     | `readFile(name)`<br><br>Arguments:<br>**• name:** `String`, file name.<br><br>Reads a file from internal storage. Returns `null` if the file does not exist or an error occurs. |
-| `removeFile`            | `boolean`    | `removeFile(name)`<br><br>Arguments:<br>**• name:** `String`, file name.<br><br>Deletes a file from internal storage. Returns `true` on success. |
-| `openAppSettings`       | `void`       | `openAppSettings()`<br><br>Opens the application settings screen in the system Settings app. |
-| `openUrl`               | `void`       | `openUrl(url)`<br><br>Arguments:<br>**• url:** `String`, destination URL or local asset path (`file:///android_asset/...`).<br><br>Loads a local asset directly in the WebView or opens an external URL via the system Intent. |
-| `saveDeepLink`          | `void`       | `saveDeepLink(intent)`<br><br>Arguments:<br>**• intent:** `Intent`, intent received in `onCreate` or `onNewIntent`.<br><br>Extracts and stores the Deep Link URL from the intent. If the page is already loaded, it is sent to JavaScript immediately. |
-| `sendDeepLink`          | `void`       | `sendDeepLink()`<br><br>Sends the stored Deep Link URL to JavaScript by calling `WUIEnvironment.response()`. Only acts if the page is already loaded. |
-| `readDeepLink`          | `String`     | `readDeepLink()`<br><br>Returns the last stored Deep Link URL, or `null` if none is stored. |
-| `clearDeepLink`         | `void`       | `clearDeepLink()`<br><br>Clears the stored Deep Link URL. |
-| `log`                   | `void`       | `log(message[, force])`<br><br>Arguments:<br>**• message:** `String`, message to log.<br>**• force:** `boolean` *optional*, default `false`. When `true`, bypasses the `developMode` restriction and always writes to Logcat.<br><br>Forwards the message to native Logcat under the `WUIEnvironment` tag with level `INFO` and the `[js]` prefix. Only active when `developMode = true` unless `force` overrides it. |
+| Method                   | Return type  | Description |
+| ------------------------ | ------------ | ----------- |
+| `requestPermission`      | `void`       | `requestPermission(type, callback)`<br><br>Arguments:<br>**• type:** `String`, one of `location`, `notifications`, `camera`, `contacts`, `storage`.<br>**• callback:** `Consumer<Boolean>`, invoked with the result.<br><br>Requests the system permission for the given type. If already granted, invokes the callback immediately. If permanently denied (`don't ask again`), returns `false` without showing the dialog. On Android < 13, `notifications` always resolves to `true`. Delegates the OS callback through `MainActivity.onRequestPermissionsResult` → `handlePermissionResult(...)`. |
+| `handlePermissionResult` | `void`       | `handlePermissionResult(requestCode, permissions, grantResults)`<br><br>Arguments:<br>**• requestCode:** `int`, request code received in `onRequestPermissionsResult`.<br>**• permissions:** `String[]`, requested permissions.<br>**• grantResults:** `int[]`, results of the request.<br><br>Forwards the result of a permission request to the callback registered by `requestPermission`. Must be called from `onRequestPermissionsResult` of the activity (see [MainActivity Initialization](#android-config-mainactivity)). |
+| `isAppInForeground`      | `boolean`    | `isAppInForeground()`<br><br>Checks whether the application is currently in the foreground. |
+| `getDeviceInfo`          | `JSONObject` | `getDeviceInfo()`<br><br>Returns device hardware information: `id`, `uuid`, `name`, `platform`, `version`, `maker`, `model`. |
+| `getDisplayInfo`         | `JSONObject` | `getDisplayInfo()`<br><br>Returns screen metrics: `width`, `height`, `density`, `densityDpi`, `orientation`, `refreshRate`, `aspectRatio`, `navigationMode`, `statusbarHeight`, `navigationbarHeight`, `notch`, system bar style flags, `statusbarOverlay` (`true` when content renders behind the status bar — detected via `FLAG_TRANSLUCENT_STATUS`, `FLAG_LAYOUT_NO_LIMITS`, or a status bar color with alpha < 255), and `navigationbarOverlay` (`true` when content renders behind the navigation bar — detected via `FLAG_TRANSLUCENT_NAVIGATION`, `FLAG_LAYOUT_NO_LIMITS`, or a navigation bar color with alpha < 255). |
+| `getAppInfo`             | `JSONObject` | `getAppInfo()`<br><br>Returns application metadata: `name`, `version`, `package`, `build`. |
+| `getPermissionsStatus`   | `JSONObject` | `getPermissionsStatus()`<br><br>Checks the status of system permissions: `phone`, `location`, `storage`, `contacts`, `camera`, `notifications`. Possible values: `granted`, `denied`, `default`. |
+| `getCurrentPosition`     | `JSONObject` | `getCurrentPosition()`<br><br>Obtains current GPS/Network coordinates: `latitude`, `longitude`, `accuracy`, `provider`, `timestamp`. Requests location permission if not yet granted. |
+| `getConnectionStatus`    | `boolean`    | `getConnectionStatus()`<br><br>Checks whether an active internet connection exists (WiFi, mobile data, or Ethernet). |
+| `setStatusbarStyle`      | `void`       | `setStatusbarStyle(color, darkIcons)`<br><br>Arguments:<br>**• color:** `String`, HEX color (`#RRGGBB`) or a `colors.xml` key (`statusbarLightColor`, `statusbarDarkColor`, etc.).<br>**• darkIcons:** `boolean`, `true` for dark icons, `false` for light.<br><br>Updates the color and icon style of the status bar. |
+| `setNavigationbarStyle`  | `void`       | `setNavigationbarStyle(color, darkIcons)`<br><br>Arguments:<br>**• color:** `String`, HEX color (`#RRGGBB`) or a `colors.xml` key (`navigationbarLightColor`, `navigationbarDarkColor`, etc.).<br>**• darkIcons:** `boolean`, `true` for dark icons, `false` for light.<br><br>Updates the color and icon style of the navigation bar. |
+| `setAppBadge`            | `void`       | `setAppBadge(number)`<br><br>Arguments:<br>**• number:** `int`, non-negative badge count. `0` clears the badge.<br><br>Sets or clears the application icon badge using a hybrid strategy based on the device manufacturer. On OEM launchers with native badge support (Samsung, Xiaomi, Huawei, Honor, Oppo, Vivo, Sony, HTC, LG, Asus), uses `ShortcutBadger` to render the number directly on the icon without publishing a notification. On stock Pixel/AOSP launchers, falls back to a silent notification (channel `wui_badge`, `IMPORTANCE_LOW`, `setShowBadge(true)`, `setNumber(n)`, `setSilent(true)`) which produces a dot on the icon — Pixel does not render native numbers. On Android 13+ requests the `POST_NOTIFICATIONS` permission first; if denied, the call fails silently. |
+| `saveFile`               | `boolean`    | `saveFile(name, content)`<br><br>Arguments:<br>**• name:** `String`, file name.<br>**• content:** `String`, content to save.<br><br>Writes a file to the application's private internal storage. Returns `true` on success. |
+| `readFile`               | `String`     | `readFile(name)`<br><br>Arguments:<br>**• name:** `String`, file name.<br><br>Reads a file from internal storage. Returns `null` if the file does not exist or an error occurs. |
+| `removeFile`             | `boolean`    | `removeFile(name)`<br><br>Arguments:<br>**• name:** `String`, file name.<br><br>Deletes a file from internal storage. Returns `true` on success. |
+| `openAppSettings`        | `void`       | `openAppSettings()`<br><br>Opens the application settings screen in the system Settings app. |
+| `openUrl`                | `void`       | `openUrl(url)`<br><br>Arguments:<br>**• url:** `String`, destination URL or local asset path (`file:///android_asset/...`).<br><br>Loads a local asset directly in the WebView or opens an external URL via the system Intent. |
+| `saveDeepLink`           | `void`       | `saveDeepLink(intent)`<br><br>Arguments:<br>**• intent:** `Intent`, intent received in `onCreate` or `onNewIntent`.<br><br>Extracts and stores the Deep Link URL from the intent. If the page is already loaded, it is sent to JavaScript immediately. |
+| `sendDeepLink`           | `void`       | `sendDeepLink()`<br><br>Sends the stored Deep Link URL to JavaScript by calling `WUIEnvironment.response()`. Only acts if the page is already loaded. |
+| `readDeepLink`           | `String`     | `readDeepLink()`<br><br>Returns the last stored Deep Link URL, or `null` if none is stored. |
+| `clearDeepLink`          | `void`       | `clearDeepLink()`<br><br>Clears the stored Deep Link URL. |
+| `downloadFile`           | `void`       | `downloadFile(url, filename, headers[, key])`<br><br>Arguments:<br>**• url:** `String`, file URL.<br>**• filename:** `String`, suggested file name; if empty, it is taken from the URL.<br>**• headers:** `JSONObject`, HTTP headers sent with the request (e.g. `Authorization`).<br>**• key:** `String` *optional*, download identifier sent back in the `onDownloadProgress` and `onDownloadFile` events (`null` if omitted).<br><br>Downloads a file with `DownloadManager` sending the given HTTP headers. Several downloads can run at the same time; each one is tracked in its own thread. It fires the same `onDownloadProgress` and `onDownloadFile` events as a download initiated from the WebView, and can be cancelled with `cancelDownload(key)`. Header values are not logged. |
+| `cancelDownload`         | `void`       | `cancelDownload([key])`<br><br>Arguments:<br>**• key:** `String` *optional*. Download to cancel; if `null` or omitted, all downloads in progress are cancelled.<br><br>Cancels downloads in progress. A download that has already completed is not removed. A cancelled download fires `onDownloadFile` with `status: "cancelled"`. **Pending testing.** |
+| `log`                    | `void`       | `log(message[, force])`<br><br>Arguments:<br>**• message:** `String`, message to log.<br>**• force:** `boolean` *optional*, default `false`. When `true`, bypasses the `developMode` restriction and always writes to Logcat.<br><br>Forwards the message to native Logcat under the `WUIEnvironment` tag with level `INFO` and the `[js]` prefix. Only active when `developMode = true` unless `force` overrides it. |
 
 <a name="android-events"></a>
 
@@ -260,10 +285,11 @@ The Android library uses **WebView** as its rendering engine.
 
 Events are callbacks that the native side sends to JavaScript when an asynchronous action completes. They must be configured on the `WUIEnvironment` instance before loading the first page.
 
-| Event               | Arguments                     | Description |
-| ------------------- | ----------------------------- | ----------- |
-| `onDownloadFile`    | `filename`, `mimetype`, `uri` | Fired when a file download initiated from the WebView completes. The file is saved to the device's public `Downloads` directory and automatically opened with the corresponding application. |
-| `onReceiveDeepLink` | `url`                         | Fired when the application receives a Deep Link URL (on launch or while running). |
+| Event                | Arguments                                                    | Description |
+| -------------------- | ------------------------------------------------------------ | ----------- |
+| `onDownloadProgress` | `key`, `loaded`, `total`                                     | Fired about every 250 ms while a file download initiated from the WebView is in progress. `loaded` is the number of bytes received and `total` the file size in bytes, or `-1` if unknown. `key` is the identifier passed to `downloadFile()`, or `null` for downloads initiated from the WebView. |
+| `onDownloadFile`     | `key`, `filename`, `mimetype`, `uri`, `status`, `httpStatus` | Fired when a file download initiated from the WebView ends. `status` is `"success"`, `"failed"` or `"cancelled"`; `uri` is `null` when it is not `"success"`. `httpStatus` is the HTTP code when the download failed because of an HTTP response (`COLUMN_REASON`), or `null`. On success the file is saved to the device's public `Downloads` directory and automatically opened with the corresponding application. With `DownloadManager` it is fired when the download completes or fails (up to version 0.5 it was fired when the download was enqueued). `key` is the identifier passed to `downloadFile()`, or `null` for downloads initiated from the WebView. |
+| `onReceiveDeepLink`  | `url`                                                        | Fired when the application receives a Deep Link URL (on launch or while running). |
 
 <a name="android-dialogs"></a>
 
@@ -291,7 +317,7 @@ Events are callbacks that the native side sends to JavaScript when an asynchrono
 Clone the repository from the official wuiproject account on GitHub:
 
 ```bash
-git clone --branch v0.5.1 https://github.com/wui-js/wuijs-environment-lib.git
+git clone --branch v0.6.0 https://github.com/wui-js/wuijs-environment-lib.git
 ```
 
 > [!NOTE]
@@ -396,6 +422,20 @@ To enable file sharing in the application, add the following statement to the `a
 > [!NOTE]
 > This configuration is required for the implementation of downloads, camera, and file sharing via WhatsApp or Email from WebView.
 
+`res/xml/file_paths.xml` must declare the internal files and cache directories (camera) and the public `Download` directory, which is used to open a downloaded asset file with `FileProvider`:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+	<files-path name="files" path="." />
+	<cache-path name="cache" path="." />
+	<external-path name="downloads" path="Download/" />
+</paths>
+```
+
+> [!NOTE]
+> Without the `external-path` entry, an asset file is still downloaded but it is not opened after the download (the error is logged).
+
 <a name="android-config-colors"></a>
 
 #### 5. Colors Configuration in `res/values/colors.xml`
@@ -439,11 +479,11 @@ package YOUR.PACKAGE.NAME; // Update this to match your project package
 
 <a name="android-config-wui-environment-js"></a>
 
-#### 7. JavaScript Class Integration `wui-environment-0.3.js`
+#### 7. JavaScript Class Integration `wui-environment-0.6.js`
 
 Copy the contents of the `src/wui-js/environment/web/` directory to the `assets/` directory of the Android project. The following structure is recommended:
 
-- `app/src/main/assets/libraries/wui-js/environment/web/wui-environment-0.3.js`
+- `app/src/main/assets/libraries/wui-js/environment/web/wui-environment-0.6.js`
 - `app/src/main/assets/libraries/wui-js/environment/demo/index.html`
 
 The above ensures that the initialization examples work correctly.
@@ -478,7 +518,7 @@ public class MainActivity extends AppCompatActivity {
 			// comment out the following line after validating the test
 			String path = "libraries/wui-js/environment/demo/index.html";
 			// uncomment the following line after validating the test
-			//String path = "file:///android_asset/pages/index.html";
+			//String path = "pages/index.html";
 			wuiEnvironment.openUrl("file:///android_asset/" + path);
 
 			// Request basic permissions
@@ -519,17 +559,6 @@ public class MainActivity extends AppCompatActivity {
 			wuiEnvironment.handlePermissionResult(requestCode, permissions, grantResults);
 		}
 	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-
-		// Required by onShowFileChooser() - forwards the file picker result to the bridge
-
-		if (wuiEnvironment != null) {
-			wuiEnvironment.handleFileChooserResult(requestCode, resultCode, data);
-		}
-    }
 }
 ```
 
@@ -540,7 +569,7 @@ public class MainActivity extends AppCompatActivity {
 
 ## iOS Library
 
-Version: `0.3`
+Version: `0.6`
 
 The iOS implementation uses WebKit (WKWebView) as its rendering engine and communicates via `WKScriptMessageHandler`.
 
@@ -559,7 +588,7 @@ The iOS implementation uses WebKit (WKWebView) as its rendering engine and commu
 
 | Constructor | Description |
 | ----------- | ----------- |
-| `WUIEnvironment(viewController: UIViewController[, developMode: Bool])` | Initializes the WUI environment. `developMode = true` allows SSL with untrusted certificates and enables debug logging. **Do not use `true` in production** — it disables certificate validation for the entire WKWebView. |
+| `WUIEnvironment(viewController: UIViewController[, developMode: Bool])` | Initializes the WUI environment. `developMode = true` allows SSL with untrusted certificates, enables debug logging and enables WKWebView inspection with Safari Web Inspector (iOS 16.4+). **Do not use `true` in production** — it disables certificate validation for the entire WKWebView. |
 
 <a name="ios-methods"></a>
 
@@ -587,6 +616,8 @@ The iOS implementation uses WebKit (WKWebView) as its rendering engine and commu
 | `sendDeepLink`          | `void`          | `sendDeepLink()`<br><br>Sends the stored Deep Link URL to JavaScript by calling `WUIEnvironment.response()`. Only acts if the page is already loaded. |
 | `readDeepLink`          | `String?`       | `readDeepLink()`<br><br>Returns the last stored Deep Link URL, or `nil` if none is stored. |
 | `clearDeepLink`         | `void`          | `clearDeepLink()`<br><br>Clears the stored Deep Link URL. |
+| `downloadFile`          | `void`          | `downloadFile(url:filename:headers:key:)`<br><br>Arguments:<br>**• url:** `String`, file URL.<br>**• filename:** `String`, suggested file name; if empty, it is taken from `Content-Disposition` or the URL.<br>**• headers:** `[String: String]`, HTTP headers sent with the request (e.g. `Authorization`).<br>**• key:** `String?` *optional*, download identifier sent back in the `onDownloadProgress` and `onDownloadFile` events (`nil` if omitted).<br><br>Downloads a file with `URLSession` sending the given HTTP headers. Several downloads can run at the same time. A non-2xx response fires `onDownloadFile` with `status: "failed"` and `httpStatus`. It fires the same `onDownloadProgress` and `onDownloadFile` events as a download initiated from the WebView, and can be cancelled with `cancelDownload(key:)`. Header values are not logged. |
+| `cancelDownload`        | `void`          | `cancelDownload(key:)`<br><br>Arguments:<br>**• key:** `String?` *optional*. Download to cancel; if `nil`, all downloads in progress are cancelled.<br><br>Cancels downloads in progress. A cancelled download fires `onDownloadFile` with `status: "cancelled"`. **Pending testing.** |
 | `log`                   | `void`          | `log(_ message[, force])`<br><br>Arguments:<br>**• message:** `String` (autoclosure), message to log.<br>**• force:** `Bool` *optional*, default `false`. When `true`, bypasses the `developMode` restriction and always writes to the Xcode console.<br><br>Forwards the message to the Xcode console with the `[WUIEnvironment][js]` prefix. Only active when `developMode = true` unless `force` overrides it. |
 
 <a name="ios-events"></a>
@@ -595,10 +626,11 @@ The iOS implementation uses WebKit (WKWebView) as its rendering engine and commu
 
 Events are callbacks that the native side sends to JavaScript when an asynchronous action completes. They must be configured on the `WUIEnvironment` instance before loading the first page.
 
-| Event               | Arguments                     | Description |
-| ------------------- | ----------------------------- | ----------- |
-| `onDownloadFile`    | `filename`, `mimetype`, `uri` | Fired when a file download initiated from the WebView completes. The file is saved to `Documents/Downloads/` inside the app sandbox and opened via `UIActivityViewController`. Requires iOS 14.5+ for `WKDownloadDelegate`; a `URLSession` fallback is used on earlier versions. |
-| `onReceiveDeepLink` | `url`                         | Fired when the application receives a Deep Link URL (on launch or while running). |
+| Event                | Arguments                                                    | Description |
+| -------------------- | ------------------------------------------------------------ | ----------- |
+| `onDownloadProgress` | `key`, `loaded`, `total`                                     | Fired about every 250 ms while a file download initiated from the WebView is in progress. `loaded` is the number of bytes received and `total` the file size in bytes, or `-1` if unknown. `key` is the identifier passed to `downloadFile()`, or `null` for downloads initiated from the WebView. |
+| `onDownloadFile`     | `key`, `filename`, `mimetype`, `uri`, `status`, `httpStatus` | Fired when a file download initiated from the WebView ends. `status` is `"success"`, `"failed"` or `"cancelled"`; `uri` is `null` when it is not `"success"`. `httpStatus` is the HTTP code when a `URLSession` download failed because of a non-2xx response, or `null`. On success the file is saved to `Documents/Downloads/` inside the app sandbox and opened via `UIActivityViewController`. Requires iOS 14.5+ for `WKDownloadDelegate`; a `URLSession` fallback is used on earlier versions. `key` is the identifier passed to `downloadFile()`, or `null` for downloads initiated from the WebView. |
+| `onReceiveDeepLink`  | `url`                                                        | Fired when the application receives a Deep Link URL (on launch or while running). |
 
 <a name="ios-dialogs"></a>
 
@@ -623,7 +655,7 @@ Events are callbacks that the native side sends to JavaScript when an asynchrono
 Clone the repository from GitHub if it has not been cloned previously:
 
 ```bash
-git clone --branch v0.5.1 https://github.com/wui-js/wuijs-environment-lib.git
+git clone --branch v0.6.0 https://github.com/wui-js/wuijs-environment-lib.git
 ```
 
 > [!NOTE]
@@ -702,11 +734,11 @@ Copy the file `src/wui-js/environment/ios/WUIEnvironment.swift` into the Xcode p
 
 <a name="ios-config-wui-environment-js"></a>
 
-#### 5. JavaScript Class Integration `wui-environment-0.3.js`
+#### 5. JavaScript Class Integration `wui-environment-0.6.js`
 
 Copy the contents of the `src/wui-js/environment/web/` directory to the `assets/` directory of the Xcode project. The following structure is recommended:
 
-- `package/assets/libraries/wui-js/environment/web/wui-environment-0.3.js`
+- `package/assets/libraries/wui-js/environment/web/wui-environment-0.6.js`
 - `package/assets/libraries/wui-js/environment/demo/index.html`
 
 The above ensures that the initialization examples work correctly.
@@ -823,15 +855,15 @@ class EnvironmentViewController: UIViewController {
 
 ## Web Library
 
-Version: `0.3`
+Version: `0.6`
 
-The web implementation uses the JavaScript class `WUIEnvironment` as its source, which must be included in every HTML page that uses the bridge. Copy `wui-environment-0.3.js` to the project's assets folder and load it with a `<script>` tag before any bridge calls:
+The web implementation uses the JavaScript class `WUIEnvironment` as its source, which must be included in every HTML page that uses the bridge. Copy `wui-environment-0.6.js` to the project's assets folder and load it with a `<script>` tag before any bridge calls:
 
 ### Sources
 
 | Type | File |
 |:----:| ---- |
-| JS   | [src/wui-js/environment/web/wui-environment-0.3.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.3.js) |
+| JS   | [src/wui-js/environment/web/wui-environment-0.6.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.6.js) |
 
 <a name="web-properties"></a>
 
@@ -839,16 +871,17 @@ The web implementation uses the JavaScript class `WUIEnvironment` as its source,
 
 Public fields and getter/setter properties of the `WUIEnvironment` instance.
 
-| Property            | Type             | Default value                                             | Description |
-| ------------------- | ---------------- | --------------------------------------------------------- | ----------- |
-| `userAgent`         | `string`         | `navigator.userAgent`                                     | (get)<br><br>Raw user agent string. Resolved at construction time. |
-| `platform`          | `string`         | `navigator.userAgentData?.platform \| navigator.platform` | (get)<br><br>Platform string from the browser or OS. Resolved at construction time. |
-| `systemName`        | `string`         | `""`                                                      | (get)<br><br>Normalized OS name derived from `platform`: `"iOS"`, `"Android"`, `"macOS"`, `"Linux"`, `"Windows Phone"`, `"Windows"`, or `""`. Resolved at construction time. |
-| `environment`       | `string`         | `"web"`                                                   | (get)<br><br>Runtime environment identifier: `"local.android"` when running in an Android WebView, `"local.ios"` when running in an iOS WKWebView, or `"web"` otherwise. Resolved at construction time. |
-| `localStorage`      | `boolean`        | `true`                                                    | (get/set)<br><br>When `true`, `saveFile`, `readFile`, and `removeFile` use `window.localStorage` as fallback on web. Has no effect inside a native WebView. |
-| `onReady`           | `function\|null` | `null`                                                    | (get/set)<br><br>Callback fired once all pending bridge requests have resolved. Receives the total request count as argument. If assigned after all requests are already resolved, fires immediately. |
-| `onDownloadFile`    | `function\|null` | `null`                                                    | (get/set)<br><br>Callback fired when a file download initiated from the WebView completes. Receives `{ filename, mimetype, uri }`. Must be assigned before loading the first page. |
-| `onReceiveDeepLink` | `function\|null` | `null`                                                    | (get/set)<br><br>Callback fired when the app receives a Deep Link URL. Receives the URL as a string. Must be assigned before loading the first page. |
+| Property             | Type             | Default value                                             | Description |
+| -------------------- | ---------------- | --------------------------------------------------------- | ----------- |
+| `userAgent`          | `string`         | `navigator.userAgent`                                     | (get)<br><br>Raw user agent string. Resolved at construction time. |
+| `platform`           | `string`         | `navigator.userAgentData?.platform \| navigator.platform` | (get)<br><br>Platform string from the browser or OS. Resolved at construction time. |
+| `systemName`         | `string`         | `""`                                                      | (get)<br><br>Normalized OS name derived from `platform`: `"iOS"`, `"Android"`, `"macOS"`, `"Linux"`, `"Windows Phone"`, `"Windows"`, or `""`. Resolved at construction time. |
+| `environment`        | `string`         | `"web"`                                                   | (get)<br><br>Runtime environment identifier: `"local.android"` when running in an Android WebView, `"local.ios"` when running in an iOS WKWebView, or `"web"` otherwise. Resolved at construction time. |
+| `localStorage`       | `boolean`        | `true`                                                    | (get/set)<br><br>When `true`, `saveFile`, `readFile`, and `removeFile` use `window.localStorage` as fallback on web. Has no effect inside a native WebView. |
+| `onReady`            | `function\|null` | `null`                                                    | (get/set)<br><br>Callback fired once all pending bridge requests have resolved. Receives the total request count as argument. If assigned after all requests are already resolved, fires immediately. |
+| `onDownloadProgress` | `function\|null` | `null`                                                    | (get/set)<br><br>Callback fired about every 250 ms while a file download initiated from the WebView is in progress. Receives `{ key, loaded, total }`: bytes received and file size in bytes (`-1` if unknown). `key` is `null` for downloads initiated from the WebView. A download started with `downloadFile()` and its own `options` callbacks does not fire this property. |
+| `onDownloadFile`     | `function\|null` | `null`                                                    | (get/set)<br><br>Callback fired when a file download initiated from the WebView ends. Receives `{ key, filename, mimetype, uri, status, httpStatus }`, where `status` is `"success"`, `"failed"` or `"cancelled"`, `uri` is `null` when it is not `"success"`, and `httpStatus` is the HTTP code when the download failed because of an HTTP response (e.g. `401`), or `null`. Must be assigned before loading the first page. `key` is `null` for downloads initiated from the WebView. A download started with `downloadFile()` and its own `options` callbacks does not fire this property. |
+| `onReceiveDeepLink`  | `function\|null` | `null`                                                    | (get/set)<br><br>Callback fired when the app receives a Deep Link URL. Receives the URL as a string. Must be assigned before loading the first page. |
 
 <a name="web-class-methods"></a>
 
@@ -891,6 +924,8 @@ Static members of the `WUIEnvironment` class.
 | `openUrl`               | `void`                    | `openUrl(url)`<br><br>Arguments:<br>**• url:** `string`, the destination URL or local asset path.<br><br>Opens a local resource in the WebView or an external link. On web opens via `window.open`. |
 | `readDeepLink`          | `Promise<string>`         | `readDeepLink([done])`<br><br>Arguments:<br>**• done:** `function` *optional*, callback.<br><br>Reads the last received Deep Link URL. Returns `null` on web. |
 | `clearDeepLink`         | `void`                    | `clearDeepLink([done])`<br><br>Arguments:<br>**• done:** `function` *optional*, callback.<br><br>Clears the stored Deep Link URL. No-op on web. |
+| `downloadFile`          | `string\|null`            | `downloadFile(url[, filename[, headers[, options]]])`<br><br>Arguments:<br>**• url:** `string`, file URL.<br>**• filename:** `string` *optional*, default `""`. Suggested file name; if empty, the native side deduces it.<br>**• headers:** `object` *optional*, default `{}`. HTTP headers sent with the request, e.g. `{ Authorization: "Bearer …" }`.<br>**• options:** `object` *optional*, default `{}`. `{ onProgress, onFile }`: callbacks for this download only, with the same arguments as `onDownloadProgress` and `onDownloadFile`. If omitted, the download events go to the global `onDownloadProgress` and `onDownloadFile` properties. For compatibility, if a `function` is passed it is used as the `done` callback, called when the native side accepts the request.<br><br>Downloads a file natively sending HTTP headers, for endpoints that require authentication (a download started with `window.open()` is requested again by the native downloader without headers). Returns the download `key`, used in the events and in `cancelDownload(key)`, or `null` on web, where it is a no-op. Several downloads can run at the same time. On Android the file name cannot be read from `Content-Disposition`, so it is recommended to pass `filename`. |
+| `cancelDownload`        | `void`                    | `cancelDownload([key[, done]])`<br><br>Arguments:<br>**• key:** `string` *optional*. Download to cancel, as returned by `downloadFile()`; if omitted, all downloads in progress are cancelled, including those started from the WebView. For compatibility, if a `function` is passed it is used as `done`.<br>**• done:** `function` *optional*, callback.<br><br>Cancels downloads in progress. A cancelled download fires `onDownloadFile` with `status: "cancelled"`. No-op on web. **Pending testing.** |
 | `log`                   | `void`                    | `log(message[, force])`<br><br>Arguments:<br>**• message:** `any`, value to log (coerced to string).<br>**• force:** `boolean` *optional*, default `false`. When `true`, instructs the native side to bypass its `developMode` restriction and always write the message.<br><br>Inside a native WebView forwards the message to the native logger (Logcat / Xcode console). On web falls back to `console.log`. |
 
 <a name="web-usage"></a>
@@ -901,7 +936,7 @@ Static members of the `WUIEnvironment` class.
 <!DOCTYPE html>
 <html>
 <head>
-	<script src="libraries/wui-js/environment/web/wui-environment-0.3.js"></script>
+	<script src="libraries/wui-js/environment/web/wui-environment-0.6.js"></script>
 </head>
 <body>
 	<script>
@@ -915,7 +950,7 @@ Static members of the `WUIEnvironment` class.
 ```
 
 > [!NOTE]
-> The `src` path is relative to the HTML file. For Android, assets are loaded from `app/src/main/assets/`; for iOS, from the `assets/` folder added to the Xcode target. The recommended path `libraries/wui-js/environment/web/wui-environment-0.3.js` matches the structure described in the installation steps.
+> The `src` path is relative to the HTML file. For Android, assets are loaded from `app/src/main/assets/`; for iOS, from the `assets/` folder added to the Xcode target. The recommended path `libraries/wui-js/environment/web/wui-environment-0.6.js` matches the structure described in the installation steps.
 
 **Bridge behavior by platform:**
 
@@ -932,12 +967,27 @@ const env = new WUIEnvironment();
 env.onReady = function(count) {
 	console.log("All", count, "requests resolved");
 };
+env.onDownloadProgress = function({ loaded, total }) {
+	console.log("Downloading:", loaded, "of", total, "bytes");
+};
 env.onDownloadFile = function(args) {
-	console.log("Downloaded:", args.filename, args.mimetype, args.uri);
+	console.log("Download", args.status + ":", args.filename, args.mimetype, args.uri);
 };
 env.onReceiveDeepLink = function(url) {
 	console.log("Deep Link received:", url);
 };
+
+// Download with HTTP headers (e.g. authenticated endpoints) and its own callbacks
+
+const key = env.downloadFile("https://example.com/api/files/1/download", "file.zip", { Authorization: "Bearer " + token }, {
+	onProgress: function({ loaded, total }) {
+		console.log("file.zip:", loaded, "of", total, "bytes");
+	},
+	onFile: function(args) {
+		console.log("file.zip", args.status, args.httpStatus);
+	}
+});
+// env.cancelDownload(key); // cancels only this download
 
 // Use onReady to wait for all initial requests to settle
 

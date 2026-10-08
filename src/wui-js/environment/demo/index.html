@@ -4,13 +4,13 @@
 		<title>WUIEnvironment - Demo Page</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-		<script type="text/javascript" src="../web/wui-environment-0.1.js"></script>
+		<script type="text/javascript" src="../web/wui-environment-0.6.js"></script>
 	</head>
 	<body>
 		<style>
 			body {
 				display: flex;
-				padding: 5px 5px 10px 5px;
+				padding: calc(5px + env(safe-area-inset-top)) calc(5px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(5px + env(safe-area-inset-left));
 				flex-direction: column;
 				justify-content: center;
 			}
@@ -34,6 +34,13 @@
 				font-family: monospace;
 				font-size: 15px;
 				color: #666;
+			}
+			input[type="text"] {
+				width: 100%;
+				max-width: 400px;
+				margin-bottom: 10px;
+				padding: 10px;
+				box-sizing: border-box;
 			}
 			button {
 				width: 100%;
@@ -59,7 +66,7 @@
 				return JSON.stringify(json).replace(/\{/, "{\n").replace(/\,/g, ",\n").replace(/}$/, "\n}");
 			}
 			const print = (id, content) => {
-				const json = typeof(format(content)) == "object" ? Object.fromEntries(
+				const json = content !== null && typeof (format(content)) === "object" ? Object.fromEntries(
 					Object.entries(content).sort(([a], [b]) => a.localeCompare(b))
 				) : null;
 				document.getElementById(id).innerHTML = json ? stringify(format(json)) : content;
@@ -152,14 +159,35 @@
 			})();
 		</script>
 		<hr>
-		<h3>.onDownloadFile()</h3>
-		<button onclick="window.open('./download.pdf');">download pdf test file</button>
-		<div>sync json return:</div>
-		<pre id="downloadFile_sync_json">...</pre>
+		<h3>.onDownloadProgress() / .onDownloadFile()</h3>
+		<button onclick="window.open('./download.pdf');">download pdf test file (WebView)</button>
+		<div>onDownloadProgress return:</div>
+		<pre id="onDownloadProgress_async">...</pre>
+		<div>onDownloadFile return:</div>
+		<pre id="onDownloadFile_async">...</pre>
+		<h3>.downloadFile() / .cancelDownload()</h3>
+		<input type="text" id="downloadFile_url" value="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf">
+		<button onclick="startDownload();">download file with own callbacks</button>
+		<button onclick="env.cancelDownload(downloadKey);">cancel last download</button>
+		<button onclick="env.cancelDownload();">cancel all downloads</button>
+		<div>returned key:</div>
+		<pre id="downloadFile_key">...</pre>
+		<div>onProgress return:</div>
+		<pre id="downloadFile_progress">...</pre>
+		<div>onFile return:</div>
+		<pre id="downloadFile_file">...</pre>
 		<script>
-			env.onDownloadFile = (json) => {
-				print("downloadFile_sync_json", json);
+			let downloadKey = null;
+			const startDownload = () => {
+				const url = document.getElementById("downloadFile_url").value;
+				downloadKey = env.downloadFile(url, "", {}, {
+					onProgress: (json) => {print("downloadFile_progress", json);},
+					onFile: (json) => {print("downloadFile_file", json);}
+				});
+				print("downloadFile_key", String(downloadKey));
 			}
+			env.onDownloadProgress = (json) => {print("onDownloadProgress_async", json);};
+			env.onDownloadFile = (json) => {print("onDownloadFile_async", json);};
 		</script>
 		<hr>
 		<h3>.setStatusbarStyle()</h3>
@@ -169,15 +197,28 @@
 		<button onclick="env.setStatusbarStyle('statusbarLightOverlayColor', true);">change style: statusbar light overlay mode</button>
 		<button onclick="env.setStatusbarStyle('statusbarDarkColor', false);">change style: statusbar dark mode</button>
 		<button onclick="env.setStatusbarStyle('statusbarDarkOverlayColor', false);">change style: statusbar dark overlay mode</button>
+		<h3>.setNavigationbarStyle()</h3>
+		<button onclick="env.setNavigationbarStyle('#ff0000', false);">change style: red color</button>
+		<button onclick="env.setNavigationbarStyle('#1e90ff', false);">change style: dodger blue color</button>
+		<button onclick="env.setNavigationbarStyle('navigationbarLightColor', true);">change style: navigationbar light mode</button>
+		<button onclick="env.setNavigationbarStyle('navigationbarLightOverlayColor', true);">change style: navigationbar light overlay mode</button>
+		<button onclick="env.setNavigationbarStyle('navigationbarDarkColor', false);">change style: navigationbar dark mode</button>
+		<button onclick="env.setNavigationbarStyle('navigationbarDarkOverlayColor', false);">change style: navigationbar dark overlay mode</button>
+		<h3>.requestPermission()</h3>
+		<button onclick="env.requestPermission('notifications', (granted) => {print('requestPermission_async', 'notifications: ' + granted);});">request permission: notifications</button>
+		<button onclick="env.requestPermission('location', (granted) => {print('requestPermission_async', 'location: ' + granted);});">request permission: location</button>
+		<button onclick="env.requestPermission('camera', (granted) => {print('requestPermission_async', 'camera: ' + granted);});">request permission: camera</button>
+		<div>async return:</div>
+		<pre id="requestPermission_async">...</pre>
 		<h3>.setAppBadge()</h3>
 		<button onclick="env.setAppBadge(1);">set app badge: 1</button>
 		<button onclick="env.setAppBadge(0);">clear app badge</button>
 		<h3>.openAppSettings()</h3>
 		<button onclick="env.openAppSettings();">open app settings</button>
-		<h3>.openURL()</h3>
-		<button onclick="env.openURL('https://www.google.com');">open web: google.com</button>
-		<button onclick="env.openURL('tel:+56912345678');">call phone: +56912345678</button>
-		<button onclick="env.openURL('mailto:test@test.com?subject=Test&body=Test%201');">compouse mail: test@test.com</button>
+		<h3>.openUrl()</h3>
+		<button onclick="env.openUrl('https://www.google.com');">open web: google.com</button>
+		<button onclick="env.openUrl('tel:+56912345678');">call phone: +56912345678</button>
+		<button onclick="env.openUrl('mailto:test@test.com?subject=Test&body=Test%201');">compose mail: test@test.com</button>
 		<hr>
 		<h3>.onReady()</h3>
 		<div>sync return:</div>
@@ -185,6 +226,11 @@
 		<h3>.onReceiveDeepLink()</h3>
 		<div>async return:</div>
 		<pre id="onReceiveDeepLink_async">...</pre>
+		<h3>.readDeepLink() / .clearDeepLink()</h3>
+		<button onclick="env.readDeepLink((url) => {print('readDeepLink_async', String(url));});">read deep link</button>
+		<button onclick="env.clearDeepLink(() => {print('readDeepLink_async', 'cleared');});">clear deep link</button>
+		<div>async return:</div>
+		<pre id="readDeepLink_async">...</pre>
 		<script>
 			env.onReady = (totalRequests) => {print("onReady_async", "totalRequests: "+totalRequests);};
 			env.onReceiveDeepLink = (url) => {print("onReceiveDeepLink_async", url);};

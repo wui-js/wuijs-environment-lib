@@ -7,6 +7,45 @@
 
 # Change Log
 
+## [v0.6.0] - 2026-10-08
+
+Features:
+
+1. **Web** - Updated the JavaScript library to version `0.6`.
+	- Added the `onDownloadProgress` property (`function` or `null`), fired about every 250 ms during a download with `{ loaded, total }` (bytes; `total` is `-1` if unknown).
+	- Added the `status` field (`"success"`, `"failed"` or `"cancelled"`) to the `onDownloadFile` arguments; `uri` is `null` when it is not `"success"`. The change is additive: consumers that ignore `status` keep working.
+	- Added the `cancelDownload()` method to cancel the download in progress. **Pending testing.**
+	- Added the `httpStatus` field to the `onDownloadFile` arguments: the HTTP code when the download failed because of an HTTP response (e.g. `401`), or `null`.
+	- Support for several simultaneous downloads: `downloadFile(url, filename, headers, options)` returns a `key` per download and accepts `options = { onProgress, onFile }` with callbacks for that download only; `cancelDownload(key, done)` cancels only that download, or all of them without `key`. The `onDownloadProgress` and `onDownloadFile` events now include `key` (`null` for downloads initiated from the WebView) and are dispatched to the download callbacks, or to the global properties when there are none. Compatible with the previous calls: a `function` as fourth argument of `downloadFile()` or first argument of `cancelDownload()` is still used as `done`.
+	- Added the `downloadFile(url, filename, headers, done)` method to download a file natively sending HTTP headers (e.g. `Authorization` for authenticated endpoints). It fires `onDownloadProgress` and `onDownloadFile` and can be cancelled with `cancelDownload()`. No-op on web.
+	- Updated the demo page (`demo/index.html`): it loads `wui-environment-0.6.js` (it still loaded `0.1`), uses `openUrl()` (renamed from `openURL()` in 0.5), adds tests for `onDownloadProgress`, `downloadFile()` with its own callbacks, `cancelDownload()`, `setNavigationbarStyle()`, `requestPermission()`, `readDeepLink()` and `clearDeepLink()`, and respects the device safe area.
+2. **Android** - Updated the Java library to version `0.6`.
+	- Added the `onDownloadProgress` event: with `DownloadManager`, the download is polled every 250 ms (`COLUMN_BYTES_DOWNLOADED_SO_FAR` / `COLUMN_TOTAL_SIZE_BYTES`) in a background thread; when copying an asset file, it is fired from the copy loop.
+	- Behavior change: with `DownloadManager`, `onDownloadFile`, the media scan and the opening of the file used to run when the download was enqueued, before the file existed. They now run when the download completes, and `onDownloadFile` is also fired when it fails or is cancelled, with the corresponding `status`. The file path is taken from `COLUMN_LOCAL_URI`.
+	- The asset file copy now runs in a background thread instead of the UI thread.
+	- Added the `cancelDownload()` method (`DownloadManager.remove()`, or interruption of the asset copy). **Pending testing.**
+	- `onDownloadFile` sends `httpStatus` from `COLUMN_REASON` when `DownloadManager` fails with an HTTP code.
+	- Several simultaneous `DownloadManager` downloads: the single `downloadId` was replaced by a map of download id → `key`, protected by the shared lock, and `cancelDownload(key)` cancels only the downloads of that `key` (all of them without `key`).
+	- `cancelDownload()` no longer removes a download that has already completed: `downloadId` is protected by a lock shared with the tracking thread and the status is checked before `remove()`.
+	- Fixed error (present since 0.5): the downloaded file was opened with `Uri.fromFile()`, which throws `FileUriExposedException` since Android 7, so it was never opened. It is now opened with a `content://` URI (`getUriForDownloadedFile()` for `DownloadManager`, `FileProvider` for asset files) and `FLAG_GRANT_READ_URI_PERMISSION`. The `uri` field of `onDownloadFile` is still the `file://` path. `res/xml/file_paths.xml` must declare `<external-path name="downloads" path="Download/" />`.
+	- Added the `downloadFile(url, filename, headers)` method: `DownloadManager.Request` with `addRequestHeader()` for each header, tracked like the WebView downloads. If `filename` is empty it is taken from the URL, since `DownloadManager` needs the name before the request. Header values are not logged.
+	- Documentation: the `MainActivity` integration example no longer overrides `onActivityResult`, which called the nonexistent `handleFileChooserResult()` method (the file chooser result is handled by an `ActivityResultLauncher` registered by the class); fixed the alternative path of the home page, which duplicated the `file:///android_asset/` prefix; and the public `handlePermissionResult()` method was added to the methods table.
+	- `developMode` now also enables WebView inspection with Chrome DevTools (`WebView.setWebContentsDebuggingEnabled()`), in parity with `isInspectable` on iOS.
+	- Fixed error: `onDownloadFile` reported the requested file name instead of the saved one when a file with the same name already existed (e.g. `download.pdf` instead of `download (1).pdf`).
+3. **iOS** - Updated the Swift library to version `0.6`.
+	- Added the `onDownloadProgress` event, observing `Progress.completedUnitCount` of `WKDownload` and of the `URLSession` fallback downloads.
+	- Added the `status` field to `onDownloadFile`; it is now also fired when the download fails or is cancelled.
+	- Added the `cancelDownload()` method (`WKDownload.cancel()` / `URLSessionDownloadTask.cancel()`). **Pending testing.**
+	- `onDownloadFile` sends `httpStatus` when a `URLSession` download fails with a non-2xx response.
+	- Several simultaneous downloads: the single current download was replaced by a dictionary per download (`URLSessionDownloadTask` or `WKDownload`, with its `key`) modified on the main thread, and `cancelDownload(key:)` cancels only that download (all of them with `nil`).
+	- Fixed error: the `URLSession` completion handler (background queue) modified the download state (progress observations and current task) concurrently with the main thread. All download state is now modified on the main thread; the temporary file is still moved synchronously inside the handler.
+	- Added the `downloadFile(url:filename:headers:)` method: `URLRequest` with the headers over the `URLSession` download. Header values are not logged.
+	- `URLSession` downloads with a non-2xx response now fire `onDownloadFile` with `status: "failed"` instead of saving the response body as the file.
+
+	- Fixed error: the progress of `URLSession` downloads was reported in percent units (`URLSessionTask.progress`) instead of bytes; `countOfBytesReceived` / `countOfBytesExpectedToReceive` are now observed.
+	- Removed the `'task' mutated after capture by sendable closure` compiler warning in the `URLSession` download.
+4. **Templates** - Added the `templates/` directory with the minimal `app.myapp.android` (Android Studio) and `app.myapp.ios` (Xcode) projects, which run the demo page with the latest version of the library, and the `tools/sync-templates.sh` script, which copies the current sources into both templates.
+
 ## [v0.5.1] - 2026-09-08
 
 Features:

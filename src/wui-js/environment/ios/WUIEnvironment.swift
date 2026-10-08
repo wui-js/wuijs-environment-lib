@@ -1,7 +1,7 @@
 /*
  * @file WUIEnvironment.swift
  * @class WUIEnvironment
- * @version 0.5
+ * @version 0.6
  * @author Sergio E. Belmar V. (wuijs.project@gmail.com)
  * @copyright Sergio E. Belmar V. (wuijs.project@gmail.com)
  */
@@ -33,6 +33,10 @@ class WUIEnvironment: NSObject {
 	private var locationCompletion: (([String: Any]) -> Void)?
 	private var permissionLocationCompletion: ((Bool) -> Void)?
 	private var downloadDestinations: [ObjectIdentifier: (url: URL, mimeType: String)] = [:]
+	private var downloadObservations: [ObjectIdentifier: NSKeyValueObservation] = [:]
+	private let downloadProgressInterval: TimeInterval = 0.25
+	private var activeDownloads: [ObjectIdentifier: (download: AnyObject, key: String?)] = [:]
+	private var cancelledDownloads: Set<ObjectIdentifier> = []
 
 	init(viewController: UIViewController, developMode: Bool = false) {
 		super.init()
@@ -556,6 +560,39 @@ class WUIEnvironment: NSObject {
 		deepLinkURL = nil
 	}
 
+	func downloadFile(url: String, filename: String = "", headers: [String: String] = [:], key: String? = nil) {
+		guard let requestURL = URL(string: url) else {
+			log("Download failed: invalid URL")
+			pushDownloadFile(key: key, filename: filename, mimeType: "", uri: nil, status: "failed")
+			return
+		}
+		var request = URLRequest(url: requestURL)
+		headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
+		let fallbackFilename = !filename.isEmpty ? filename : requestURL.lastPathComponent.isEmpty ? "download" : requestURL.lastPathComponent
+		log("Start download: \(url) with \(headers.count) headers")
+		startDownloadTask(request: request, key: key, filename: fallbackFilename, mimeType: mimeTypeForExtension(requestURL.pathExtension)) { [weak self] tempURL, response in
+			guard let self = self else { return }
+			let mimeType = response?.mimeType ?? self.mimeTypeForExtension(requestURL.pathExtension)
+			let suggestedFilename = !filename.isEmpty ? filename : response?.suggestedFilename ?? fallbackFilename
+			self.saveDownloadedFile(from: tempURL, filename: suggestedFilename, mimeType: mimeType, key: key)
+		}
+	}
+
+	func cancelDownload(key: String? = nil) {
+		DispatchQueue.main.async { [weak self] in
+			guard let self = self else { return }
+			for (id, entry) in self.activeDownloads where key == nil || key!.isEmpty || entry.key == key {
+				self.cancelledDownloads.insert(id)
+				if #available(iOS 14.5, *), let download = entry.download as? WKDownload {
+					download.cancel(nil)
+				} else if let task = entry.download as? URLSessionDownloadTask {
+					task.cancel()
+				}
+				self.log("Download cancelled")
+			}
+		}
+	}
+
 	func log(_ message: @autoclosure () -> String, force: Bool = false) {
 		guard developMode || force else { return }
 		NSLog("%@ %@", logTag, message())
@@ -590,7 +627,106 @@ class WUIEnvironment: NSObject {
 		return UIColor(named: color)
 	}
 
-	private func saveDownloadedFile(from tempURL: URL, filename: String, mimeType: String) {
+	// Download state (downloadObservations, activeDownloads, cancelledDownloads)
+	// is only mutated on the main thread; URLSession callbacks run on a background queue.
+	private func runOnMain(_ block: @escaping () -> Void) {
+		if Thread.isMainThread {
+			block()
+		} else {
+			DispatchQueue.main.async(execute: block)
+		}
+	}
+
+	private func observeDownloadProgress(_ progress: Progress, id: ObjectIdentifier, key: String?) {
+		var lastProgressTime: TimeInterval = 0
+		downloadObservations[id] = progress.observe(\.completedUnitCount) { [weak self] progress, _ in
+			guard let self = self else { return }
+			let now = Date().timeIntervalSince1970
+			guard now - lastProgressTime >= self.downloadProgressInterval else { return }
+			lastProgressTime = now
+			self.pushDownloadProgress(key: key, loaded: progress.completedUnitCount, total: progress.totalUnitCount)
+		}
+	}
+
+	// URLSessionTask.progress is measured in percent units, so the byte counters are observed instead.
+	private func observeDownloadProgress(_ task: URLSessionDownloadTask, id: ObjectIdentifier, key: String?) {
+		var lastProgressTime: TimeInterval = 0
+		downloadObservations[id] = task.observe(\.countOfBytesReceived) { [weak self] task, _ in
+			guard let self = self else { return }
+			let now = Date().timeIntervalSince1970
+			guard now - lastProgressTime >= self.downloadProgressInterval else { return }
+			lastProgressTime = now
+			self.pushDownloadProgress(key: key, loaded: task.countOfBytesReceived, total: task.countOfBytesExpectedToReceive)
+		}
+	}
+
+	private func stopObservingDownload(id: ObjectIdentifier) {
+		downloadObservations.removeValue(forKey: id)?.invalidate()
+	}
+
+	private func pushDownloadProgress(key: String? = nil, loaded: Int64, total: Int64) {
+		pushJavascript(arguments: [
+			"event":  "onDownloadProgress",
+			"key":    key.map { $0 as Any } ?? NSNull(),
+			"loaded": loaded,
+			"total":  total > 0 ? total : -1
+		])
+	}
+
+	private func pushDownloadFile(key: String? = nil, filename: String, mimeType: String, uri: String?, status: String, httpStatus: Int? = nil) {
+		pushJavascript(arguments: [
+			"event":      "onDownloadFile",
+			"key":        key.map { $0 as Any } ?? NSNull(),
+			"filename":   filename,
+			"mimetype":   mimeType,
+			"uri":        uri.map { $0 as Any } ?? NSNull(),
+			"status":     status,
+			"httpStatus": httpStatus.map { $0 as Any } ?? NSNull()
+		])
+	}
+
+	private func startDownloadTask(request: URLRequest, key: String? = nil, filename: String, mimeType: String, completion: @escaping (URL, URLResponse?) -> Void) {
+		final class TaskReference: @unchecked Sendable {
+			var task: URLSessionDownloadTask?
+		}
+		let reference = TaskReference()
+		let task = URLSession.shared.downloadTask(with: request) { [weak self] tempURL, response, error in
+			guard let self = self else { return }
+			if let task = reference.task {
+				let id = ObjectIdentifier(task)
+				DispatchQueue.main.async { [weak self] in
+					self?.stopObservingDownload(id: id)
+					self?.activeDownloads.removeValue(forKey: id)
+					self?.cancelledDownloads.remove(id)
+				}
+			}
+			guard let tempURL = tempURL else {
+				let cancelled = (error as? URLError)?.code == .cancelled
+				self.log("Download \(cancelled ? "cancelled" : "failed"): \(error?.localizedDescription ?? "unknown")")
+				self.pushDownloadFile(key: key, filename: filename, mimeType: mimeType, uri: nil, status: cancelled ? "cancelled" : "failed")
+				return
+			}
+			if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+				self.log("Download failed: HTTP \(httpResponse.statusCode)")
+				self.pushDownloadFile(key: key, filename: filename, mimeType: mimeType, uri: nil, status: "failed", httpStatus: httpResponse.statusCode)
+				return
+			}
+			if let task = reference.task {
+				self.pushDownloadProgress(key: key, loaded: task.countOfBytesReceived, total: task.countOfBytesExpectedToReceive)
+			}
+			completion(tempURL, response)
+		}
+		reference.task = task
+		runOnMain { [weak self] in
+			guard let self = self else { return }
+			let id = ObjectIdentifier(task)
+			self.activeDownloads[id] = (download: task, key: key)
+			self.observeDownloadProgress(task, id: id, key: key)
+			task.resume()
+		}
+	}
+
+	private func saveDownloadedFile(from tempURL: URL, filename: String, mimeType: String, key: String? = nil) {
 		let fm = FileManager.default
 		guard let dir = fm.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
 		let downloadsDir = dir.appendingPathComponent("Downloads", isDirectory: true)
@@ -611,16 +747,12 @@ class WUIEnvironment: NSObject {
 			log("File downloaded: \(destURL.path)")
 			DispatchQueue.main.async { [weak self] in
 				guard let self = self else { return }
-				self.pushJavascript(arguments: [
-					"event":    "onDownloadFile",
-					"filename": destURL.lastPathComponent,
-					"mimetype": mimeType,
-					"uri":      destURL.absoluteString
-				])
+				self.pushDownloadFile(key: key, filename: destURL.lastPathComponent, mimeType: mimeType, uri: destURL.absoluteString, status: "success")
 				self.presentShareSheet(for: destURL)
 			}
 		} catch {
 			log("Failed to save downloaded file: \(error.localizedDescription)")
+			pushDownloadFile(key: key, filename: filename, mimeType: mimeType, uri: nil, status: "failed")
 		}
 	}
 
@@ -646,30 +778,25 @@ class WUIEnvironment: NSObject {
 			do {
 				try fm.copyItem(at: url, to: destURL)
 				log("File copied to downloads: \(destURL.path)")
+				let size = ((try? fm.attributesOfItem(atPath: destURL.path))?[.size] as? NSNumber)?.int64Value ?? -1
+				pushDownloadProgress(loaded: max(size, 0), total: size)
 				DispatchQueue.main.async { [weak self] in
 					guard let self = self else { return }
-					self.pushJavascript(arguments: [
-						"event":    "onDownloadFile",
-						"filename": destURL.lastPathComponent,
-						"mimetype": mimeType,
-						"uri":      destURL.absoluteString
-					])
+					self.pushDownloadFile(filename: destURL.lastPathComponent, mimeType: mimeType, uri: destURL.absoluteString, status: "success")
 					self.presentShareSheet(for: destURL)
 				}
 			} catch {
 				log("Failed to copy file to downloads: \(error.localizedDescription)")
+				pushDownloadFile(filename: filename, mimeType: mimeType, uri: nil, status: "failed")
 			}
 		} else {
 			log("Start background download: \(filename)")
-			URLSession.shared.downloadTask(with: url) { [weak self] tempURL, response, error in
-				guard let self = self, let tempURL = tempURL else {
-					self?.log("Background download failed: \(error?.localizedDescription ?? "unknown")")
-					return
-				}
+			startDownloadTask(request: URLRequest(url: url), filename: filename, mimeType: mimeTypeForExtension(url.pathExtension)) { [weak self] tempURL, response in
+				guard let self = self else { return }
 				let mimeType = response?.mimeType ?? self.mimeTypeForExtension(url.pathExtension)
 				let suggestedFilename = response?.suggestedFilename ?? filename
 				self.saveDownloadedFile(from: tempURL, filename: suggestedFilename, mimeType: mimeType)
-			}.resume()
+			}
 		}
 	}
 
@@ -776,6 +903,14 @@ extension WUIEnvironment: WKScriptMessageHandler {
 			case "clearDeepLink":
 				clearDeepLink()
 				push("null")
+			case "downloadFile":
+				if let url = json["url"] as? String {
+					downloadFile(url: url, filename: json["filename"] as? String ?? "", headers: json["headers"] as? [String: String] ?? [:], key: json["key"] as? String)
+				}
+				push("null")
+			case "cancelDownload":
+				cancelDownload(key: json["key"] as? String)
+				push("null")
 			case "log":
 				let message = json["message"] as? String ?? ""
 				let force = json["force"] as? Bool ?? false
@@ -859,13 +994,9 @@ extension WUIEnvironment: WKNavigationDelegate {
 			if let url = navigationResponse.response.url {
 				let suggestedFilename = navigationResponse.response.suggestedFilename ?? url.lastPathComponent
 				log("Start download (URLSession fallback): \(suggestedFilename)")
-				URLSession.shared.downloadTask(with: url) { [weak self] tempURL, _, error in
-					guard let self = self, let tempURL = tempURL else {
-						self?.log("URLSession download failed: \(error?.localizedDescription ?? "unknown")")
-						return
-					}
-					self.saveDownloadedFile(from: tempURL, filename: suggestedFilename, mimeType: mimeType)
-				}.resume()
+				startDownloadTask(request: URLRequest(url: url), filename: suggestedFilename, mimeType: mimeType) { [weak self] tempURL, _ in
+					self?.saveDownloadedFile(from: tempURL, filename: suggestedFilename, mimeType: mimeType)
+				}
 			}
 			decisionHandler(.cancel)
 		}
@@ -873,12 +1004,20 @@ extension WUIEnvironment: WKNavigationDelegate {
 
 	@available(iOS 14.5, *)
 	func webView(_ webView: WKWebView, navigationAction: WKNavigationAction, didBecome download: WKDownload) {
-		download.delegate = self
+		startDownload(download)
 	}
 
 	@available(iOS 14.5, *)
 	func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
+		startDownload(download)
+	}
+
+	@available(iOS 14.5, *)
+	private func startDownload(_ download: WKDownload) {
 		download.delegate = self
+		let id = ObjectIdentifier(download)
+		activeDownloads[id] = (download: download, key: nil)
+		observeDownloadProgress(download.progress, id: id, key: nil)
 	}
 }
 
@@ -911,23 +1050,27 @@ extension WUIEnvironment: WKDownloadDelegate {
 	}
 
 	func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
-		downloadDestinations.removeValue(forKey: ObjectIdentifier(download))
-		log("Download failed: \(error.localizedDescription)")
+		let key = ObjectIdentifier(download)
+		let info = downloadDestinations.removeValue(forKey: key)
+		stopObservingDownload(id: key)
+		activeDownloads.removeValue(forKey: key)
+		let status = cancelledDownloads.remove(key) != nil ? "cancelled" : "failed"
+		log("Download \(status): \(error.localizedDescription)")
+		pushDownloadFile(filename: info?.url.lastPathComponent ?? "", mimeType: info?.mimeType ?? "", uri: nil, status: status)
 	}
 
 	func downloadDidFinish(_ download: WKDownload) {
 		let key = ObjectIdentifier(download)
+		stopObservingDownload(id: key)
+		activeDownloads.removeValue(forKey: key)
+		cancelledDownloads.remove(key)
 		guard let info = downloadDestinations[key] else { return }
 		downloadDestinations.removeValue(forKey: key)
 		log("Download finished: \(info.url.lastPathComponent)")
+		pushDownloadProgress(loaded: download.progress.completedUnitCount, total: download.progress.totalUnitCount)
 		DispatchQueue.main.async { [weak self] in
 			guard let self = self else { return }
-			self.pushJavascript(arguments: [
-				"event":    "onDownloadFile",
-				"filename": info.url.lastPathComponent,
-				"mimetype": info.mimeType,
-				"uri":      info.url.absoluteString
-			])
+			self.pushDownloadFile(filename: info.url.lastPathComponent, mimeType: info.mimeType, uri: info.url.absoluteString, status: "success")
 			self.presentShareSheet(for: info.url)
 		}
 	}

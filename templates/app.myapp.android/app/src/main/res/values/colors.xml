@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="ic_launcher_background">#FFFFFFFF</color>
+    <color name="statusbarLightColor">#f5f5f5</color>
+    <color name="statusbarLightOverlayColor">#c2c2c2</color>
+    <color name="statusbarDarkColor">#1e1e2e</color>
+    <color name="statusbarDarkOverlayColor">#18181f</color>
+    <color name="navigationbarLightColor">#f5f5f5</color>
+    <color name="navigationbarLightOverlayColor">#c2c2c2</color>
+    <color name="navigationbarDarkColor">#1e1e2e</color>
+    <color name="navigationbarDarkOverlayColor">#18181f</color>
+</resources>
