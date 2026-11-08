@@ -19,7 +19,7 @@ struct EnvironmentView: UIViewControllerRepresentable {
 class EnvironmentViewController: UIViewController {
 
 	private var wuiEnvironment: WUIEnvironment?
-	private let developMode: Bool = false // true: enables bridge logging, Web Inspector and accepts untrusted SSL certificates (development only)
+	private let developMode: Bool = false
 
 	override var preferredStatusBarStyle: UIStatusBarStyle {
 		return wuiEnvironment?.preferredStatusBarStyle ?? .default
@@ -28,21 +28,15 @@ class EnvironmentViewController: UIViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		wuiEnvironment = WUIEnvironment(viewController: self, developMode: developMode)
-
 		// Load the demo page
-
 		let path = "assets/libraries/wui-js/environment/demo/index.html"
 		wuiEnvironment?.openUrl(url: Bundle.main.bundleURL.appendingPathComponent(path).absoluteString)
-
 		// Add deep link listener
-
 		NotificationCenter.default.addObserver(self, selector: #selector(handleDeepLink(_:)), name: .wuiDeepLink, object: nil)
 	}
 
 	deinit {
-
 		// Remove deep link listener
-
 		NotificationCenter.default.removeObserver(self, name: .wuiDeepLink, object: nil)
 	}
 

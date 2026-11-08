@@ -6,7 +6,7 @@ Platforms: [Android](wui-environment-android-en.md) | [iOS](wui-environment-ios-
 
 # WUIEnvironment (iOS)
 
-Version: `0.6`
+Version: `0.7`
 
 The iOS implementation uses WebKit (WKWebView) as its rendering engine and communicates via `WKScriptMessageHandler`.
 
@@ -81,6 +81,26 @@ Events are callbacks that the native side sends to JavaScript when an asynchrono
 | `confirm(message)`         | Displays `UIAlertController` with **OK** / **Cancel** buttons. Returns `true` / `false` to JavaScript. |
 | `prompt(message, default)` | Displays `UIAlertController` with a text input and **OK** / **Cancel** buttons. Returns the entered string or `null` on cancel. |
 
+<a name="ios-notes"></a>
+
+## Implementation Notes
+
+- `getPermissionsStatus()`: the notifications status is resolved last, because it is the only asynchronous one.
+- `getConnectionStatus()`: reads `currentPath` from the network monitor, which is always current; `isConnected` is an
+  asynchronous fallback that may be stale.
+- `setStatusbarStyle()`: in SwiftUI apps `UIHostingController` does not forward `childForStatusBarStyle`, so the icon
+  style is also propagated through the window's `overrideUserInterfaceStyle`.
+- `openUrl()`: `file:///` plus an absolute path produces `file:////path` (4 slashes); the extra leading slashes are
+  removed.
+- Named colors are resolved from `Assets.xcassets`; the app must define those color sets (installation step
+  3).
+- The download state is only mutated on the main thread (`runOnMain()`), because `URLSession` callbacks run on a
+  background queue.
+- Download progress observes the byte counters, because `URLSessionTask.progress` is measured in percent
+  units.
+- `locationManagerDidChangeAuthorization()`: it does not check `locationServicesEnabled()`, to avoid the main-thread
+  unresponsiveness warning; `didFailWithError` handles that case.
+
 <a name="ios-install"></a>
 
 ## Installation and Setup
@@ -92,7 +112,7 @@ Events are callbacks that the native side sends to JavaScript when an asynchrono
 Clone the repository from GitHub if it has not been cloned previously:
 
 ```bash
-git clone --branch v0.6.0 https://github.com/wui-js/wuijs-environment-lib.git
+git clone --branch v0.7.0 https://github.com/wui-js/wuijs-environment-lib.git
 ```
 
 > [!NOTE]
@@ -171,11 +191,11 @@ Copy the file `src/wui-js/environment/ios/WUIEnvironment.swift` into the Xcode p
 
 <a name="ios-config-wui-environment-js"></a>
 
-### 5. JavaScript Class Integration `wui-environment-0.6.js`
+### 5. JavaScript Class Integration `wui-environment-0.7.js`
 
 Copy the contents of the `src/wui-js/environment/web/` directory to the `assets/` directory of the Xcode project. The following structure is recommended:
 
-- `package/assets/libraries/wui-js/environment/web/wui-environment-0.6.js`
+- `package/assets/libraries/wui-js/environment/web/wui-environment-0.7.js`
 - `package/assets/libraries/wui-js/environment/demo/index.html`
 
 The above ensures that the initialization examples work correctly.

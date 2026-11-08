@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
+set -eu
 #
 # Copies the current WUIEnvironment sources (Java, Swift, JavaScript and demo page)
 # from src/ into the Android and iOS templates under templates/.
 #
 # Usage (from the repository root or from tools/):
 #   tools/sync-templates.sh
-
-set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/src/wui-js/environment"

@@ -6,7 +6,7 @@ Plataformas: [Android](wui-environment-android-es.md) | [iOS](wui-environment-io
 
 # WUIEnvironment (iOS)
 
-Versión: `0.6`
+Versión: `0.7`
 
 La implementación en iOS utiliza como motor de renderización WebKit (WKWebView) y se comunica mediante `WKScriptMessageHandler`.
 
@@ -81,6 +81,26 @@ Los eventos son callbacks que el lado nativo envía al JavaScript cuando una acc
 | `confirm()` | Muestra un `UIAlertController` estilo alert con el mensaje y botones **OK** / **Cancelar**. Devuelve `true` al confirmar, `false` al cancelar. |
 | `prompt()`  | Muestra un `UIAlertController` estilo alert con el mensaje, un `UITextField` con el valor por defecto y botones **OK** / **Cancelar**. Devuelve el texto ingresado al confirmar, `null` al cancelar. |
 
+<a name="ios-notes"></a>
+
+## Notas de Implementación
+
+- `getPermissionsStatus()`: el estado de las notificaciones se resuelve al final, porque es el único asíncrono.
+- `getConnectionStatus()`: lee `currentPath` del monitor de red, que está siempre al día; `isConnected` es un respaldo
+  asíncrono que puede estar desfasado.
+- `setStatusbarStyle()`: en aplicaciones SwiftUI, `UIHostingController` no reenvía `childForStatusBarStyle`, por lo que
+  el estilo de los íconos se propaga además con `overrideUserInterfaceStyle` de la ventana.
+- `openUrl()`: `file:///` más una ruta absoluta produce `file:////ruta` (4 barras); se eliminan las barras iniciales
+  sobrantes.
+- Los colores con nombre se resuelven desde `Assets.xcassets`; la aplicación debe definir esos conjuntos de colores
+  (paso 3 de la instalación).
+- El estado de las descargas solo se modifica en el hilo principal (`runOnMain()`), porque las funciones de retorno de
+  `URLSession` se ejecutan en una cola en segundo plano.
+- El progreso de las descargas observa los contadores de bytes, porque `URLSessionTask.progress` se mide en unidades
+  porcentuales.
+- `locationManagerDidChangeAuthorization()`: no consulta `locationServicesEnabled()` para evitar la advertencia de
+  bloqueo del hilo principal; ese caso lo resuelve `didFailWithError`.
+
 <a name="ios-install"></a>
 
 ## Instalación y Configuración
@@ -92,7 +112,7 @@ Los eventos son callbacks que el lado nativo envía al JavaScript cuando una acc
 Clonar el repositorio desde GitHub si aún no se ha realizado:
 
 ```bash
-git clone --branch v0.6.0 https://github.com/wui-js/wuijs-environment-lib.git
+git clone --branch v0.7.0 https://github.com/wui-js/wuijs-environment-lib.git
 ```
 
 > [!NOTE]
@@ -171,11 +191,11 @@ Copiar el archivo `src/wui-js/environment/ios/WUIEnvironment.swift` en el proyec
 
 <a name="ios-config-wui-environment-js"></a>
 
-### 5. Integración de la clase JavaScript `wui-environment-0.6.js`
+### 5. Integración de la clase JavaScript `wui-environment-0.7.js`
 
 Copiar el contenido del directorio `src/wui-js/environment/web/` al directorio `assets/` del proyecto en Xcode. Se recomienda la siguiente estructura:
 
-- `package/assets/libraries/wui-js/environment/web/wui-environment-0.6.js`
+- `package/assets/libraries/wui-js/environment/web/wui-environment-0.7.js`
 - `package/assets/libraries/wui-js/environment/demo/index.html`
 
 Lo anterior asegura que los ejemplos de inicialización funcionen correctamente.

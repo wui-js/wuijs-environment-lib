@@ -6,15 +6,15 @@ Platforms: [Android](wui-environment-android-en.md) | [iOS](wui-environment-ios-
 
 # WUIEnvironment (Web)
 
-Version: `0.6`
+Version: `0.7`
 
-The web implementation uses the JavaScript class `WUIEnvironment` as its source, which must be included in every HTML page that uses the bridge. Copy `wui-environment-0.6.js` to the project's assets folder and load it with a `<script>` tag before any bridge calls:
+The web implementation uses the JavaScript class `WUIEnvironment` as its source, which must be included in every HTML page that uses the bridge. Copy `wui-environment-0.7.js` to the project's assets folder and load it with a `<script>` tag before any bridge calls:
 
 ## Sources
 
 | Type | File |
 |:----:| ---- |
-| JS   | [src/wui-js/environment/web/wui-environment-0.6.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.6.js) |
+| JS   | [src/wui-js/environment/web/wui-environment-0.7.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.7.js) |
 
 <a name="web-properties"></a>
 
@@ -42,7 +42,7 @@ Static members of the `WUIEnvironment` class.
 
 | Member           | Type            | Description |
 | ---------------- | --------------- | ----------- |
-| `version`        | `string`        | Library version: `"0.6"`. |
+| `version`        | `string`        | Library version: `"0.7"`. |
 | `response(args)` | `static method` | Entry point for native-to-JS communication. Called internally by the native bridge to deliver request responses and dispatch `onDownloadFile` / `onReceiveDeepLink` events. Not intended to be called from application code. |
 
 <a name="web-instance-methods"></a>
@@ -87,7 +87,7 @@ Static members of the `WUIEnvironment` class.
 <!DOCTYPE html>
 <html>
 <head>
-	<script src="libraries/wui-js/environment/web/wui-environment-0.6.js"></script>
+	<script src="libraries/wui-js/environment/web/wui-environment-0.7.js"></script>
 </head>
 <body>
 	<script>
@@ -101,7 +101,7 @@ Static members of the `WUIEnvironment` class.
 ```
 
 > [!NOTE]
-> The `src` path is relative to the HTML file. For Android, assets are loaded from `app/src/main/assets/`; for iOS, from the `assets/` folder added to the Xcode target. The recommended path `libraries/wui-js/environment/web/wui-environment-0.6.js` matches the structure described in the installation steps.
+> The `src` path is relative to the HTML file. For Android, assets are loaded from `app/src/main/assets/`; for iOS, from the `assets/` folder added to the Xcode target. The recommended path `libraries/wui-js/environment/web/wui-environment-0.7.js` matches the structure described in the installation steps.
 
 **Bridge behavior by platform:**
 

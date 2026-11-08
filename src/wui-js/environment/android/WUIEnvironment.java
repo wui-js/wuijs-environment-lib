@@ -1,27 +1,29 @@
 /*
  * @file WUIEnvironment.java
  * @class WUIEnvironment
- * @version 0.6
+ * @version 0.7
  * @author Sergio E. Belmar V. (wuijs.project@gmail.com)
  * @copyright Sergio E. Belmar V. (wuijs.project@gmail.com)
  */
 
-package YOUR.PACKAGE.NAME; // Update this to match your project package
+package YOUR.PACKAGE.NAME;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.ActivityManager;
+import android.app.Activity;
 import android.app.ActivityManager.RunningAppProcessInfo;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.DownloadManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationManager;
@@ -30,6 +32,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
+import android.net.http.SslError;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -38,21 +41,21 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.net.http.SslError;
 import android.webkit.ConsoleMessage;
-import android.webkit.WebChromeClient;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
 import android.webkit.SslErrorHandler;
 import android.webkit.URLUtil;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
-import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
+
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -62,33 +65,40 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.PermissionChecker;
 import androidx.core.content.FileProvider;
-import org.json.JSONException;
-import org.json.JSONObject;
+import androidx.core.content.PermissionChecker;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+
 import me.leolin.shortcutbadger.ShortcutBadger;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class WUIEnvironment {
-	
+
 	public WebView webView;
 	private final Context context;
 	private AppCompatActivity activity;
 	private boolean developMode = false;
-	private String deepLinkURL = null;
+	private String deepLinkUrl = null;
 	private boolean pageLoaded = false;
 	private final String className = "WUIEnvironment";
 	private final Map<Integer, Consumer<Boolean>> permissionCallbacks = new HashMap<>();
@@ -101,22 +111,22 @@ public class WUIEnvironment {
 	private volatile boolean downloadCancelled = false;
 	private final Object downloadLock = new Object();
 	private final Map<Long, String> activeDownloads = new HashMap<>();
-	private final java.util.Set<Long> cancelledDownloads = new java.util.HashSet<>();
+	private final Set<Long> cancelledDownloads = new HashSet<>();
 
 	// Initialization
 
 	public WUIEnvironment(Context context, boolean developMode) throws JSONException {
 		this.context = context;
 		this.developMode = developMode;
-		webViewInit();
+		initWebView();
 	}
 
 	public WUIEnvironment(Context context) throws JSONException {
 		this.context = context;
-		webViewInit();
+		initWebView();
 	}
 
-	private void webViewInit() throws JSONException {
+	private void initWebView() throws JSONException {
 		webView = new WebView(context);
 		if (context instanceof AppCompatActivity) {
 			activity = (AppCompatActivity) context;
@@ -128,13 +138,13 @@ public class WUIEnvironment {
 			setupDownloadHandler();
 		}
 	}
-	
+
 	private void setupActivityResultLaunchers() {
 		cameraLauncher = activity.registerForActivityResult(
 			new ActivityResultContracts.StartActivityForResult(),
 			result -> {
 				if (fileChooserCallback == null) return;
-				Uri[] results = result.getResultCode() == android.app.Activity.RESULT_OK && cameraOutputUri != null
+				Uri[] results = result.getResultCode() == Activity.RESULT_OK && cameraOutputUri != null
 					? new Uri[]{ cameraOutputUri } : null;
 				fileChooserCallback.onReceiveValue(results);
 				fileChooserCallback = null;
@@ -146,7 +156,7 @@ public class WUIEnvironment {
 			result -> {
 				if (fileChooserCallback == null) return;
 				Intent data = result.getData();
-				Uri[] results = result.getResultCode() == android.app.Activity.RESULT_OK && data != null && data.getData() != null
+				Uri[] results = result.getResultCode() == Activity.RESULT_OK && data != null && data.getData() != null
 					? new Uri[]{ data.getData() } : null;
 				fileChooserCallback.onReceiveValue(results);
 				fileChooserCallback = null;
@@ -160,7 +170,7 @@ public class WUIEnvironment {
 		JSONObject appInfo = getAppInfo();
 		WebView.setWebContentsDebuggingEnabled(developMode);
 		WebSettings webSettings = webView.getSettings();
-		webSettings.setUserAgentString(webSettings.getUserAgentString()+" "+className+" ("+appInfo.get("name")+"/"+appInfo.get("version")+")");
+		webSettings.setUserAgentString(webSettings.getUserAgentString() + " " + className + " (" + appInfo.get("name") + "/" + appInfo.get("version") + ")");
 		webSettings.setJavaScriptEnabled(true);
 		webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
 		webSettings.setAllowFileAccess(true);
@@ -294,7 +304,7 @@ public class WUIEnvironment {
 				view.loadUrl(url);
 				return true;
 			}
-			
+
 			@Override
 			public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
 				int errorCode = error.getPrimaryError();
@@ -309,7 +319,7 @@ public class WUIEnvironment {
 				}
 				handler.cancel();
 			}
-			
+
 			@Override
 			public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
 				super.onReceivedError(view, request, error);
@@ -323,11 +333,11 @@ public class WUIEnvironment {
 			public void onPageFinished(WebView view, String url) {
 				pageLoaded = true;
 				log("i", "Page loaded: " + url);
-				if (deepLinkURL != null) {
+				if (deepLinkUrl != null) {
 					try {
 						JSONObject arguments = new JSONObject();
 						arguments.put("event", "onReceiveDeepLink");
-						arguments.put("url", deepLinkURL);
+						arguments.put("url", deepLinkUrl);
 						pushJavascript(arguments);
 					} catch (JSONException e) {
 						throw new RuntimeException(e);
@@ -354,7 +364,7 @@ public class WUIEnvironment {
 
 	private void setupDownloadHandler() {
 		webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
-			log("d", "Start download '"+url+"'");
+			log("d", "Start download '" + url + "'");
 			if (url.startsWith("file:///android_asset/")) {
 				downloadCancelled = false;
 				new Thread(() -> downloadAssetFile(url, contentDisposition, mimetype)).start();
@@ -385,8 +395,8 @@ public class WUIEnvironment {
 				if (sourceParent != null && !sourceParent.exists() && !sourceParent.mkdirs()) {
 					log("w", "Could not create cache directory: " + sourceParent.getAbsolutePath());
 				}
-				try (java.io.InputStream in = context.getAssets().open(assetPath);
-					java.io.FileOutputStream out = new java.io.FileOutputStream(sourceFile)) {
+				try (InputStream in = context.getAssets().open(assetPath);
+					FileOutputStream out = new FileOutputStream(sourceFile)) {
 					byte[] buffer = new byte[1024];
 					int len;
 					while ((len = in.read(buffer)) != -1) {
@@ -411,8 +421,8 @@ public class WUIEnvironment {
 				long total = sourceFile.length();
 				long loaded = 0;
 				long lastProgressTime = 0;
-				try (java.io.FileInputStream in = new java.io.FileInputStream(sourceFile);
-					java.io.FileOutputStream out = new java.io.FileOutputStream(downloadFile)) {
+				try (FileInputStream in = new FileInputStream(sourceFile);
+					FileOutputStream out = new FileOutputStream(downloadFile)) {
 					byte[] buffer = new byte[1024];
 					int len;
 					while (!downloadCancelled && (len = in.read(buffer)) != -1) {
@@ -600,8 +610,6 @@ public class WUIEnvironment {
 			if (callback != null) callback.accept(true);
 			return;
 		}
-		// Permanent denial ("don't ask again") returns DENIED immediately via onRequestPermissionsResult,
-		// so the callback resolves with false without blocking — no extra heuristic needed.
 		final String[] permsFinal = perms;
 		int requestCode = permissionRequestCodeCounter.getAndIncrement();
 		permissionCallbacks.put(requestCode, callback);
@@ -618,7 +626,6 @@ public class WUIEnvironment {
 		}
 		callback.accept(granted);
 	}
-
 
 	public boolean isAppInForeground() {
 		ActivityManager activityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
@@ -701,7 +708,7 @@ public class WUIEnvironment {
 			int densityDpi = context.getResources().getDisplayMetrics().densityDpi;
 			int width = context.getResources().getDisplayMetrics().widthPixels;
 			int height = context.getResources().getDisplayMetrics().heightPixels;
-			String orientation = context.getResources().getConfiguration().orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE ? "landscape" : "portrait";
+			String orientation = context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE ? "landscape" : "portrait";
 			float refreshRate = activity.getWindowManager().getDefaultDisplay().getRefreshRate();
 			boolean hasNotch = false;
 			int statusbarHeight = 0;
@@ -736,12 +743,9 @@ public class WUIEnvironment {
 				if (resourceId > 0) navigationbarHeight = context.getResources().getDimensionPixelSize(resourceId);
 			}
 			try {
-				// Navigation Mode detection (Gestures vs Buttons)
-				// 0: 3-button, 1: 2-button, 2: Gestures
 				int mode = Settings.Secure.getInt(context.getContentResolver(), "navigation_mode");
 				navigationMode = mode == 2 ? "gestures" : mode == 1 ? "2-button" : "3-button";
 			} catch (Settings.SettingNotFoundException e) {
-				// On some Honor/Huawei devices detect by bar height
 				if (navigationbarHeight > 0 && navigationbarHeight < (20 * density)) navigationMode = "gestures_hint";
 			}
 			displayInfo.put("width", (int) (width / density));
@@ -866,7 +870,6 @@ public class WUIEnvironment {
 				}
 			}
 			if (location == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-				// (Android 11+)
 				final Location[] freshLocation = new Location[1];
 				final CountDownLatch latch = new CountDownLatch(1);
 				try {
@@ -880,7 +883,6 @@ public class WUIEnvironment {
 							latch.countDown();
 						}
 					);
-					// Wait up to 5 seconds for a fresh location
 					if (latch.await(5, TimeUnit.SECONDS)) {
 						location = freshLocation[0];
 					}
@@ -1048,7 +1050,7 @@ public class WUIEnvironment {
 
 	public boolean saveFile(String name, String content) {
 		try (FileOutputStream fileOutput = activity.openFileOutput(name, Context.MODE_PRIVATE)) {
-			fileOutput.write(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+			fileOutput.write(content.getBytes(StandardCharsets.UTF_8));
 			fileOutput.flush();
 			log("i", "File saved: " + name);
 			return true;
@@ -1122,7 +1124,7 @@ public class WUIEnvironment {
 
 	public void saveDeepLink(Intent intent) throws JSONException {
 		if (intent != null && intent.getData() != null) {
-			deepLinkURL = intent.getData().toString();
+			deepLinkUrl = intent.getData().toString();
 			sendDeepLink();
 		}
 	}
@@ -1132,7 +1134,7 @@ public class WUIEnvironment {
 			try {
 				JSONObject arguments = new JSONObject();
 				arguments.put("event", "onReceiveDeepLink");
-				arguments.put("url", deepLinkURL);
+				arguments.put("url", deepLinkUrl);
 				pushJavascript(arguments);
 			} catch (JSONException e) {
 				throw new RuntimeException(e);
@@ -1141,11 +1143,11 @@ public class WUIEnvironment {
 	}
 
 	public String readDeepLink() {
-		return deepLinkURL;
+		return deepLinkUrl;
 	}
 
 	public void clearDeepLink() {
-		deepLinkURL = null;
+		deepLinkUrl = null;
 	}
 
 	public void downloadFile(String url, String filename, JSONObject headers) {
@@ -1188,7 +1190,7 @@ public class WUIEnvironment {
 
 	public void cancelDownload(String key) {
 		boolean all = key == null || key.isEmpty();
-		java.util.List<Long> ids = new java.util.ArrayList<>();
+		List<Long> ids = new ArrayList<>();
 		synchronized (downloadLock) {
 			if (all) {
 				downloadCancelled = true;

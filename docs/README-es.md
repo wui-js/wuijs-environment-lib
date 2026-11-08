@@ -14,9 +14,9 @@
 |                       | |
 | --------------------- | ----------- |
 | **Nombre librería**   | `wuijs-environment-lib` |
-| **Versión librería**  | `0.6.0` ([Registro de Cambios](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-es.md)) |
+| **Versión librería**  | `0.7.0` ([Registro de Cambios](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/CHANGELOG-es.md)) |
 | **Paquete npm**       | `@wui-js/environment` ([npm](https://www.npmjs.com/package/@wui-js/environment)) |
-| **Versión documento** | `0.6.0.20261016.0` |
+| **Versión documento** | `0.7.0.20261107.0` |
 | **Licencia**          | `Licencia Apache 2.0` |
 | **Autor**             | `Sergio E. Belmar V. <wuijs.project@gmail.com>` |
 | **Repositorio**       | [https://github.com/wui-js/wuijs-environment-lib](https://github.com/wui-js/wuijs-environment-lib) |
@@ -50,14 +50,22 @@ Actualmente está disponible para Android en Java mediante WebView y para iOS en
 
 ### Acerca del Proyecto WUI/JS
 
-WUI/JS Environment Lib es parte del proyecto WUI/JS, que consta actualmente de 4 repositorios:
+WUI/JS Environment Lib es parte del proyecto WUI/JS, que consta actualmente de 8 repositorios:
 
 -	[https://github.com/wui-js/wuijs-main-lib](https://github.com/wui-js/wuijs-main-lib)<br>
 	Librería Principal UI.<br><br>
--	[https://github.com/wui-js/wuijs-environment-lib](https://github.com/wui-js/wuijs-environment-lib)<br>
-	Librería Puente UI entre entornos web y motores de renderizado web nativos.<br><br>
+-	[https://github.com/wui-js/wuijs-data-lib](https://github.com/wui-js/wuijs-data-lib)<br>
+	Librería de Datos de referencia.<br><br>
 -	[https://github.com/wui-js/wuijs-plugins-lib](https://github.com/wui-js/wuijs-plugins-lib)<br>
 	Librería de Complementos UI.<br><br>
+-	[https://github.com/wui-js/wuijs-views-lib](https://github.com/wui-js/wuijs-views-lib)<br>
+	Librería de Vistas UI.<br><br>
+-	[https://github.com/wui-js/wuijs-environment-lib](https://github.com/wui-js/wuijs-environment-lib)<br>
+	Librería Puente UI entre entornos web y motores de renderizado web nativos.<br><br>
+-	[https://github.com/wui-js/wuijs-lab-lib](https://github.com/wui-js/wuijs-lab-lib)<br>
+	Librería de componentes UI experimentales.<br><br>
+-	[https://github.com/wui-js/wuijs-specs-lib](https://github.com/wui-js/wuijs-specs-lib)<br>
+	Librería de Especificaciones universales de código y contenido.<br><br>
 -	[https://github.com/wui-js/wuijs-demos](https://github.com/wui-js/wuijs-demos)<br>
 	Repositorio con demos y ejemplos de uso de las librerías del proyecto.<br><br>
 
@@ -67,9 +75,9 @@ WUI/JS Environment Lib es parte del proyecto WUI/JS, que consta actualmente de 4
 
 | Nombre Clase                                                                                                                       | Plataforma | Versión | Descripción |
 | ---------------------------------------------------------------------------------------------------------------------------------- | ---------- |:-------:| ----------- |
-| [WUIEnvironment](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/classes/environment/wui-environment-android-es.md) | Android    | `0.6`   | Clase Java del bridge para Android (WebView). |
-| [WUIEnvironment](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/classes/environment/wui-environment-ios-es.md)     | iOS        | `0.6`   | Clase Swift del bridge para iOS (WKWebView). |
-| [WUIEnvironment](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/classes/environment/wui-environment-web-es.md)     | Web        | `0.6`   | Clase JavaScript, contraparte web de las clases Android e iOS. |
+| [WUIEnvironment](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/classes/environment/wui-environment-android-es.md) | Android    | `0.7`   | Clase Java del bridge para Android (WebView). |
+| [WUIEnvironment](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/classes/environment/wui-environment-ios-es.md)     | iOS        | `0.7`   | Clase Swift del bridge para iOS (WKWebView). |
+| [WUIEnvironment](https://github.com/wui-js/wuijs-environment-lib/blob/main/docs/classes/environment/wui-environment-web-es.md)     | Web        | `0.7`   | Clase JavaScript, contraparte web de las clases Android e iOS. |
 
 <a name="dirmap"></a>
 
@@ -126,9 +134,9 @@ wuijs-environment-lib/
 
 | Tipo  | Versión | Archivo |
 | ----- | :------:| ------- |
-| Java  | 0.6     | [src/wui-js/environment/android/WUIEnvironment.java](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/android/WUIEnvironment.java) |
-| Swift | 0.6     | [src/wui-js/environment/ios/WUIEnvironment.swift](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/ios/WUIEnvironment.swift) |
-| JS    | 0.6     | [src/wui-js/environment/web/wui-environment-0.6.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.6.js) |
+| Java  | 0.7     | [src/wui-js/environment/android/WUIEnvironment.java](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/android/WUIEnvironment.java) |
+| Swift | 0.7     | [src/wui-js/environment/ios/WUIEnvironment.swift](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/ios/WUIEnvironment.swift) |
+| JS    | 0.7     | [src/wui-js/environment/web/wui-environment-0.7.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.7.js) |
 
 <a name="quickstart"></a>
 
@@ -156,7 +164,7 @@ wuiEnvironment.saveDeepLink(getIntent());
 5. En las páginas HTML propias, incluir la clase JS e instanciarla:
 
 ```html
-<script src="libraries/wui-js/environment/web/wui-environment-0.6.js"></script>
+<script src="libraries/wui-js/environment/web/wui-environment-0.7.js"></script>
 <script>
 	const env = new WUIEnvironment();
 	env.getDeviceInfo(function(info) {
@@ -184,7 +192,7 @@ wuiEnvironment?.openUrl(url: Bundle.main.bundleURL.appendingPathComponent("asset
 5. En las páginas HTML propias, incluir la clase JS e instanciarla:
 
 ```html
-<script src="libraries/wui-js/environment/web/wui-environment-0.6.js"></script>
+<script src="libraries/wui-js/environment/web/wui-environment-0.7.js"></script>
 <script>
 	const env = new WUIEnvironment();
 	env.getDeviceInfo(function(info) {
@@ -213,7 +221,7 @@ Están pensadas como punto de partida para una nueva app híbrida: contienen só
 
 ## Librería Android
 
-Versión: `0.6`
+Versión: `0.7`
 
 La librería Java para Android utiliza como motor de renderización **WebView**.
 

@@ -6,7 +6,7 @@ Plataformas: [Android](wui-environment-android-es.md) | [iOS](wui-environment-io
 
 # WUIEnvironment (Web)
 
-Versión: `0.6`
+Versión: `0.7`
 
 La implementación en Web utiliza como fuentes a la clase JavaScript `WUIEnvironment` que debe ser incluida en cada página HTML que utilice el bridge.
 
@@ -14,7 +14,7 @@ La implementación en Web utiliza como fuentes a la clase JavaScript `WUIEnviron
 
 | Tipo | Archivo |
 |:----:| ------- |
-| JS   | [src/wui-js/environment/web/wui-environment-0.6.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.6.js) |
+| JS   | [src/wui-js/environment/web/wui-environment-0.7.js](https://github.com/wui-js/wuijs-environment-lib/blob/main/src/wui-js/environment/web/wui-environment-0.7.js) |
 
 <a name="web-properties"></a>
 
@@ -42,7 +42,7 @@ Miembros estáticos de la clase `WUIEnvironment`.
 
 | Miembro          | Tipo              | Descripción |
 | ---------------- | ----------------- | ----------- |
-| `version`        | `string`          | Versión de la librería: `"0.6"`. |
+| `version`        | `string`          | Versión de la librería: `"0.7"`. |
 | `response(args)` | `método estático` | Punto de entrada para la comunicación nativo→JS. Llamado internamente por el bridge nativo para entregar respuestas de solicitudes y despachar los eventos `onDownloadFile` / `onReceiveDeepLink`. No está destinado a ser llamado desde el código de la aplicación. |
 
 <a name="web-instance-methods"></a>
@@ -87,7 +87,7 @@ Miembros estáticos de la clase `WUIEnvironment`.
 <!DOCTYPE html>
 <html>
 <head>
-	<script src="libraries/wui-js/environment/web/wui-environment-0.6.js"></script>
+	<script src="libraries/wui-js/environment/web/wui-environment-0.7.js"></script>
 </head>
 <body>
 	<script>
@@ -101,7 +101,7 @@ Miembros estáticos de la clase `WUIEnvironment`.
 ```
 
 > [!NOTE]
-> La ruta en `src` es relativa al archivo HTML. En Android, los assets se cargan desde `app/src/main/assets/`; en iOS, desde la carpeta `assets/` agregada al target de Xcode. La ruta recomendada `libraries/wui-js/environment/web/wui-environment-0.6.js` coincide con la estructura descrita en los pasos de instalación.
+> La ruta en `src` es relativa al archivo HTML. En Android, los assets se cargan desde `app/src/main/assets/`; en iOS, desde la carpeta `assets/` agregada al target de Xcode. La ruta recomendada `libraries/wui-js/environment/web/wui-environment-0.7.js` coincide con la estructura descrita en los pasos de instalación.
 
 **Comportamiento del bridge según plataforma:**
 

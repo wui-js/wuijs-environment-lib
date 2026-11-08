@@ -1,9 +1,9 @@
 {
 	"name": "@wui-js/environment",
-	"version": "0.6.0",
+	"version": "0.7.0",
 	"license": "Apache-2.0",
 	"author": "Sergio E. Belmar V. <wuijs.project@gmail.com>",
-	"description": "WUI/JS Environment Lib — Native bridge for WebView/WKWebView (web layer)",
+	"description": "WUI/JS Environment Lib - JavaScript end of the bridge between web environments and native web rendering engines (Android WebView, iOS WKWebView) for hybrid apps.",
 	"keywords": [
 		"ui",
 		"bridge",

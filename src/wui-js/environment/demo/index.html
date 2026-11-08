@@ -4,7 +4,7 @@
 		<title>WUIEnvironment - Demo Page</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-		<script type="text/javascript" src="../web/wui-environment-0.6.js"></script>
+		<script type="text/javascript" src="../web/wui-environment-0.7.js"></script>
 	</head>
 	<body>
 		<style>
@@ -160,16 +160,16 @@
 		</script>
 		<hr>
 		<h3>.onDownloadProgress() / .onDownloadFile()</h3>
-		<button onclick="window.open('./download.pdf');">download pdf test file (WebView)</button>
+		<button id="downloadPdfButton">download pdf test file (WebView)</button>
 		<div>onDownloadProgress return:</div>
 		<pre id="onDownloadProgress_async">...</pre>
 		<div>onDownloadFile return:</div>
 		<pre id="onDownloadFile_async">...</pre>
 		<h3>.downloadFile() / .cancelDownload()</h3>
 		<input type="text" id="downloadFile_url" value="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf">
-		<button onclick="startDownload();">download file with own callbacks</button>
-		<button onclick="env.cancelDownload(downloadKey);">cancel last download</button>
-		<button onclick="env.cancelDownload();">cancel all downloads</button>
+		<button id="startDownloadButton">download file with own callbacks</button>
+		<button id="cancelLastDownloadButton">cancel last download</button>
+		<button id="cancelAllDownloadsButton">cancel all downloads</button>
 		<div>returned key:</div>
 		<pre id="downloadFile_key">...</pre>
 		<div>onProgress return:</div>
@@ -191,34 +191,34 @@
 		</script>
 		<hr>
 		<h3>.setStatusbarStyle()</h3>
-		<button onclick="env.setStatusbarStyle('#ff0000', false);">change style: red color</button>
-		<button onclick="env.setStatusbarStyle('#1e90ff', false);">change style: dodger blue color</button>
-		<button onclick="env.setStatusbarStyle('statusbarLightColor', true);">change style: statusbar light mode</button>
-		<button onclick="env.setStatusbarStyle('statusbarLightOverlayColor', true);">change style: statusbar light overlay mode</button>
-		<button onclick="env.setStatusbarStyle('statusbarDarkColor', false);">change style: statusbar dark mode</button>
-		<button onclick="env.setStatusbarStyle('statusbarDarkOverlayColor', false);">change style: statusbar dark overlay mode</button>
+		<button id="statusbarRedButton">change style: red color</button>
+		<button id="statusbarBlueButton">change style: dodger blue color</button>
+		<button id="statusbarLightButton">change style: statusbar light mode</button>
+		<button id="statusbarLightOverlayButton">change style: statusbar light overlay mode</button>
+		<button id="statusbarDarkButton">change style: statusbar dark mode</button>
+		<button id="statusbarDarkOverlayButton">change style: statusbar dark overlay mode</button>
 		<h3>.setNavigationbarStyle()</h3>
-		<button onclick="env.setNavigationbarStyle('#ff0000', false);">change style: red color</button>
-		<button onclick="env.setNavigationbarStyle('#1e90ff', false);">change style: dodger blue color</button>
-		<button onclick="env.setNavigationbarStyle('navigationbarLightColor', true);">change style: navigationbar light mode</button>
-		<button onclick="env.setNavigationbarStyle('navigationbarLightOverlayColor', true);">change style: navigationbar light overlay mode</button>
-		<button onclick="env.setNavigationbarStyle('navigationbarDarkColor', false);">change style: navigationbar dark mode</button>
-		<button onclick="env.setNavigationbarStyle('navigationbarDarkOverlayColor', false);">change style: navigationbar dark overlay mode</button>
+		<button id="navigationbarRedButton">change style: red color</button>
+		<button id="navigationbarBlueButton">change style: dodger blue color</button>
+		<button id="navigationbarLightButton">change style: navigationbar light mode</button>
+		<button id="navigationbarLightOverlayButton">change style: navigationbar light overlay mode</button>
+		<button id="navigationbarDarkButton">change style: navigationbar dark mode</button>
+		<button id="navigationbarDarkOverlayButton">change style: navigationbar dark overlay mode</button>
 		<h3>.requestPermission()</h3>
-		<button onclick="env.requestPermission('notifications', (granted) => {print('requestPermission_async', 'notifications: ' + granted);});">request permission: notifications</button>
-		<button onclick="env.requestPermission('location', (granted) => {print('requestPermission_async', 'location: ' + granted);});">request permission: location</button>
-		<button onclick="env.requestPermission('camera', (granted) => {print('requestPermission_async', 'camera: ' + granted);});">request permission: camera</button>
+		<button id="requestNotificationsButton">request permission: notifications</button>
+		<button id="requestLocationButton">request permission: location</button>
+		<button id="requestCameraButton">request permission: camera</button>
 		<div>async return:</div>
 		<pre id="requestPermission_async">...</pre>
 		<h3>.setAppBadge()</h3>
-		<button onclick="env.setAppBadge(1);">set app badge: 1</button>
-		<button onclick="env.setAppBadge(0);">clear app badge</button>
+		<button id="setAppBadgeButton">set app badge: 1</button>
+		<button id="clearAppBadgeButton">clear app badge</button>
 		<h3>.openAppSettings()</h3>
-		<button onclick="env.openAppSettings();">open app settings</button>
+		<button id="openAppSettingsButton">open app settings</button>
 		<h3>.openUrl()</h3>
-		<button onclick="env.openUrl('https://www.google.com');">open web: google.com</button>
-		<button onclick="env.openUrl('tel:+56912345678');">call phone: +56912345678</button>
-		<button onclick="env.openUrl('mailto:test@test.com?subject=Test&body=Test%201');">compose mail: test@test.com</button>
+		<button id="openWebButton">open web: google.com</button>
+		<button id="callPhoneButton">call phone: +56912345678</button>
+		<button id="composeMailButton">compose mail: test@test.com</button>
 		<hr>
 		<h3>.onReady()</h3>
 		<div>sync return:</div>
@@ -227,13 +227,43 @@
 		<div>async return:</div>
 		<pre id="onReceiveDeepLink_async">...</pre>
 		<h3>.readDeepLink() / .clearDeepLink()</h3>
-		<button onclick="env.readDeepLink((url) => {print('readDeepLink_async', String(url));});">read deep link</button>
-		<button onclick="env.clearDeepLink(() => {print('readDeepLink_async', 'cleared');});">clear deep link</button>
+		<button id="readDeepLinkButton">read deep link</button>
+		<button id="clearDeepLinkButton">clear deep link</button>
 		<div>async return:</div>
 		<pre id="readDeepLink_async">...</pre>
 		<script>
 			env.onReady = (totalRequests) => {print("onReady_async", "totalRequests: "+totalRequests);};
 			env.onReceiveDeepLink = (url) => {print("onReceiveDeepLink_async", url);};
+			const buttonActions = {
+				downloadPdfButton: () => {window.open("./download.pdf");},
+				startDownloadButton: startDownload,
+				cancelLastDownloadButton: () => {env.cancelDownload(downloadKey);},
+				cancelAllDownloadsButton: () => {env.cancelDownload();},
+				statusbarRedButton: () => {env.setStatusbarStyle("#ff0000", false);},
+				statusbarBlueButton: () => {env.setStatusbarStyle("#1e90ff", false);},
+				statusbarLightButton: () => {env.setStatusbarStyle("statusbarLightColor", true);},
+				statusbarLightOverlayButton: () => {env.setStatusbarStyle("statusbarLightOverlayColor", true);},
+				statusbarDarkButton: () => {env.setStatusbarStyle("statusbarDarkColor", false);},
+				statusbarDarkOverlayButton: () => {env.setStatusbarStyle("statusbarDarkOverlayColor", false);},
+				navigationbarRedButton: () => {env.setNavigationbarStyle("#ff0000", false);},
+				navigationbarBlueButton: () => {env.setNavigationbarStyle("#1e90ff", false);},
+				navigationbarLightButton: () => {env.setNavigationbarStyle("navigationbarLightColor", true);},
+				navigationbarLightOverlayButton: () => {env.setNavigationbarStyle("navigationbarLightOverlayColor", true);},
+				navigationbarDarkButton: () => {env.setNavigationbarStyle("navigationbarDarkColor", false);},
+				navigationbarDarkOverlayButton: () => {env.setNavigationbarStyle("navigationbarDarkOverlayColor", false);},
+				requestNotificationsButton: () => {env.requestPermission("notifications", (granted) => {print("requestPermission_async", "notifications: " + granted);});},
+				requestLocationButton: () => {env.requestPermission("location", (granted) => {print("requestPermission_async", "location: " + granted);});},
+				requestCameraButton: () => {env.requestPermission("camera", (granted) => {print("requestPermission_async", "camera: " + granted);});},
+				setAppBadgeButton: () => {env.setAppBadge(1);},
+				clearAppBadgeButton: () => {env.setAppBadge(0);},
+				openAppSettingsButton: () => {env.openAppSettings();},
+				openWebButton: () => {env.openUrl("https://www.google.com");},
+				callPhoneButton: () => {env.openUrl("tel:+56912345678");},
+				composeMailButton: () => {env.openUrl("mailto:test@test.com?subject=Test&body=Test%201");},
+				readDeepLinkButton: () => {env.readDeepLink((url) => {print("readDeepLink_async", String(url));});},
+				clearDeepLinkButton: () => {env.clearDeepLink(() => {print("readDeepLink_async", "cleared");});}
+			};
+			Object.entries(buttonActions).forEach(([id, action]) => {document.getElementById(id).addEventListener("click", action);});
 		</script>
 	</body>
 </html>

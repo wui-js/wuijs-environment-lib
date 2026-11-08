@@ -7,6 +7,22 @@
 
 # Registro de Cambios
 
+## [v0.7.0] - 2026-11-07
+
+Características:
+
+1. **Web** - Se actualizó la librería JavaScript a la versión `0.7`.
+	- Se normalizó el código JS: `typeof` con paréntesis y comparaciones estrictas.
+	- La página demo registra los botones con `addEventListener()` en lugar de atributos `onclick`.
+2. **Android** - Se actualizó la librería Java a la versión `0.7`.
+	- Se normalizó el código Java: `deepLinkURL` → `deepLinkUrl`, `webViewInit()` → `initWebView()`, importaciones explícitas en lugar de nombres calificados, concatenación con espacios y sin espacios al final de línea.
+	- Los comentarios explicativos se trasladaron a la sección Notas de Implementación de la documentación de la clase.
+3. **iOS** - Se actualizó la librería Swift a la versión `0.7`.
+	- Se normalizó el código Swift: `deepLinkURL` → `deepLinkUrl`, `webViewInit()` → `initWebView()`, siglas en camelCase en los identificadores propios (`destUrl`, `tempUrl`, `requestUrl`, …) e interpolación en lugar de concatenación.
+	- Los comentarios explicativos se trasladaron a la sección Notas de Implementación de la documentación de la clase.
+4. **Plantillas** - Se actualizaron las plantillas a la versión `0.7` de la librería.
+	- Se normalizó el código: `MainActivity.java` y `MainView.swift` sin comentarios explicativos ni líneas en blanco dentro de los métodos; `tools/sync-templates.sh` con la cabecera `#!/usr/bin/env bash` + `set -eu`.
+
 ## [v0.6.0] - 2026-10-08
 
 Características:

@@ -1,7 +1,7 @@
 /*
  * @file WUIEnvironment.swift
  * @class WUIEnvironment
- * @version 0.6
+ * @version 0.7
  * @author Sergio E. Belmar V. (wuijs.project@gmail.com)
  * @copyright Sergio E. Belmar V. (wuijs.project@gmail.com)
  */
@@ -20,7 +20,7 @@ class WUIEnvironment: NSObject {
 	var webView: WKWebView!
 	private weak var viewController: UIViewController?
 	private var developMode: Bool = false
-	private var deepLinkURL: String? = nil
+	private var deepLinkUrl: String? = nil
 	private var pageLoaded: Bool = false
 	private let logTag = "WUIEnvironment"
 	private weak var statusbarView: UIView?
@@ -42,20 +42,20 @@ class WUIEnvironment: NSObject {
 		super.init()
 		self.viewController = viewController
 		self.developMode = developMode
-		webViewInit()
+		initWebView()
 		setupNetworkMonitor()
 	}
 
 	init(viewController: UIViewController) {
 		super.init()
 		self.viewController = viewController
-		webViewInit()
+		initWebView()
 		setupNetworkMonitor()
 	}
 
 	// MARK: - Initialization
 
-	private func webViewInit() {
+	private func initWebView() {
 		let contentController = WKUserContentController()
 		let xhrPatch = """
 			(function() {
@@ -370,7 +370,6 @@ class WUIEnvironment: NSObject {
 			case .limited:               permissions["contacts"] = "granted"
 			@unknown default: break
 		}
-		// Notifications must be resolved last; it is the only async status.
 		UNUserNotificationCenter.current().getNotificationSettings { settings in
 			switch settings.authorizationStatus {
 				case .authorized, .provisional: permissions["notifications"] = "granted"
@@ -399,7 +398,6 @@ class WUIEnvironment: NSObject {
 	}
 
 	func getConnectionStatus() -> Bool {
-		// currentPath is live; isConnected is a stale async fallback.
 		if let monitor = networkMonitor {
 			return monitor.currentPath.status == .satisfied
 		}
@@ -424,8 +422,6 @@ class WUIEnvironment: NSObject {
 			self.statusbarView = view
 			self.preferredStatusBarStyle = darkIcons ? .darkContent : .lightContent
 			vc.setNeedsStatusBarAppearanceUpdate()
-			// UIHostingController doesn't forward childForStatusBarStyle in SwiftUI apps;
-			// propagate icon style via window overrideUserInterfaceStyle as fallback.
 			window?.overrideUserInterfaceStyle = darkIcons ? .light : .dark
 			self.log("Statusbar set color: \(color), darkIcons: \(darkIcons)")
 		}
@@ -529,52 +525,51 @@ class WUIEnvironment: NSObject {
 		DispatchQueue.main.async { [weak self] in
 			guard let self = self else { return }
 			self.log("openUrl requested: \(url)")
-			if url.hasPrefix("file://"), let rawURL = URL(string: url) {
-				// file:/// + /absolute/path produces file:////path (4 slashes); strip extra leading slashes.
-				var cleanPath = rawURL.path
+			if url.hasPrefix("file://"), let rawUrl = URL(string: url) {
+				var cleanPath = rawUrl.path
 				while cleanPath.hasPrefix("//") { cleanPath = String(cleanPath.dropFirst()) }
-				let fileURL = URL(fileURLWithPath: cleanPath)
-				self.webView.loadFileURL(fileURL, allowingReadAccessTo: Bundle.main.bundleURL)
-			} else if let externalURL = URL(string: url) {
-				UIApplication.shared.open(externalURL)
+				let fileUrl = URL(fileURLWithPath: cleanPath)
+				self.webView.loadFileURL(fileUrl, allowingReadAccessTo: Bundle.main.bundleURL)
+			} else if let externalUrl = URL(string: url) {
+				UIApplication.shared.open(externalUrl)
 			}
 		}
 	}
 
 	func saveDeepLink(url: URL?) {
 		guard let url = url else { return }
-		deepLinkURL = url.absoluteString
+		deepLinkUrl = url.absoluteString
 		sendDeepLink()
 	}
 
 	func sendDeepLink() {
-		guard let url = deepLinkURL, pageLoaded else { return }
+		guard let url = deepLinkUrl, pageLoaded else { return }
 		pushJavascript(arguments: ["event": "onReceiveDeepLink", "url": url])
 	}
 
 	func readDeepLink() -> String? {
-		return deepLinkURL
+		return deepLinkUrl
 	}
 
 	func clearDeepLink() {
-		deepLinkURL = nil
+		deepLinkUrl = nil
 	}
 
 	func downloadFile(url: String, filename: String = "", headers: [String: String] = [:], key: String? = nil) {
-		guard let requestURL = URL(string: url) else {
+		guard let requestUrl = URL(string: url) else {
 			log("Download failed: invalid URL")
 			pushDownloadFile(key: key, filename: filename, mimeType: "", uri: nil, status: "failed")
 			return
 		}
-		var request = URLRequest(url: requestURL)
+		var request = URLRequest(url: requestUrl)
 		headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
-		let fallbackFilename = !filename.isEmpty ? filename : requestURL.lastPathComponent.isEmpty ? "download" : requestURL.lastPathComponent
+		let fallbackFilename = !filename.isEmpty ? filename : requestUrl.lastPathComponent.isEmpty ? "download" : requestUrl.lastPathComponent
 		log("Start download: \(url) with \(headers.count) headers")
-		startDownloadTask(request: request, key: key, filename: fallbackFilename, mimeType: mimeTypeForExtension(requestURL.pathExtension)) { [weak self] tempURL, response in
+		startDownloadTask(request: request, key: key, filename: fallbackFilename, mimeType: mimeTypeForExtension(requestUrl.pathExtension)) { [weak self] tempUrl, response in
 			guard let self = self else { return }
-			let mimeType = response?.mimeType ?? self.mimeTypeForExtension(requestURL.pathExtension)
+			let mimeType = response?.mimeType ?? self.mimeTypeForExtension(requestUrl.pathExtension)
 			let suggestedFilename = !filename.isEmpty ? filename : response?.suggestedFilename ?? fallbackFilename
-			self.saveDownloadedFile(from: tempURL, filename: suggestedFilename, mimeType: mimeType, key: key)
+			self.saveDownloadedFile(from: tempUrl, filename: suggestedFilename, mimeType: mimeType, key: key)
 		}
 	}
 
@@ -612,7 +607,7 @@ class WUIEnvironment: NSObject {
 	private func parseColor(_ color: String) -> UIColor? {
 		if color.hasPrefix("#") {
 			var hex = String(color.dropFirst())
-			if hex.count == 6 { hex = "FF" + hex }
+			if hex.count == 6 { hex = "FF\(hex)" }
 			guard hex.count == 8 else { return nil }
 			var value: UInt64 = 0
 			Scanner(string: hex).scanHexInt64(&value)
@@ -623,12 +618,9 @@ class WUIEnvironment: NSObject {
 				alpha: CGFloat((value >> 24) & 0xFF) / 255
 			)
 		}
-		// Named colors resolved from Assets.xcassets; host app must define the color sets.
 		return UIColor(named: color)
 	}
 
-	// Download state (downloadObservations, activeDownloads, cancelledDownloads)
-	// is only mutated on the main thread; URLSession callbacks run on a background queue.
 	private func runOnMain(_ block: @escaping () -> Void) {
 		if Thread.isMainThread {
 			block()
@@ -648,7 +640,6 @@ class WUIEnvironment: NSObject {
 		}
 	}
 
-	// URLSessionTask.progress is measured in percent units, so the byte counters are observed instead.
 	private func observeDownloadProgress(_ task: URLSessionDownloadTask, id: ObjectIdentifier, key: String?) {
 		var lastProgressTime: TimeInterval = 0
 		downloadObservations[id] = task.observe(\.countOfBytesReceived) { [weak self] task, _ in
@@ -690,7 +681,7 @@ class WUIEnvironment: NSObject {
 			var task: URLSessionDownloadTask?
 		}
 		let reference = TaskReference()
-		let task = URLSession.shared.downloadTask(with: request) { [weak self] tempURL, response, error in
+		let task = URLSession.shared.downloadTask(with: request) { [weak self] tempUrl, response, error in
 			guard let self = self else { return }
 			if let task = reference.task {
 				let id = ObjectIdentifier(task)
@@ -700,7 +691,7 @@ class WUIEnvironment: NSObject {
 					self?.cancelledDownloads.remove(id)
 				}
 			}
-			guard let tempURL = tempURL else {
+			guard let tempUrl = tempUrl else {
 				let cancelled = (error as? URLError)?.code == .cancelled
 				self.log("Download \(cancelled ? "cancelled" : "failed"): \(error?.localizedDescription ?? "unknown")")
 				self.pushDownloadFile(key: key, filename: filename, mimeType: mimeType, uri: nil, status: cancelled ? "cancelled" : "failed")
@@ -714,7 +705,7 @@ class WUIEnvironment: NSObject {
 			if let task = reference.task {
 				self.pushDownloadProgress(key: key, loaded: task.countOfBytesReceived, total: task.countOfBytesExpectedToReceive)
 			}
-			completion(tempURL, response)
+			completion(tempUrl, response)
 		}
 		reference.task = task
 		runOnMain { [weak self] in
@@ -726,7 +717,7 @@ class WUIEnvironment: NSObject {
 		}
 	}
 
-	private func saveDownloadedFile(from tempURL: URL, filename: String, mimeType: String, key: String? = nil) {
+	private func saveDownloadedFile(from tempUrl: URL, filename: String, mimeType: String, key: String? = nil) {
 		let fm = FileManager.default
 		guard let dir = fm.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
 		let downloadsDir = dir.appendingPathComponent("Downloads", isDirectory: true)
@@ -735,20 +726,20 @@ class WUIEnvironment: NSObject {
 		}
 		let nameBase = (filename as NSString).deletingPathExtension
 		let ext = (filename as NSString).pathExtension
-		var destURL = downloadsDir.appendingPathComponent(filename)
+		var destUrl = downloadsDir.appendingPathComponent(filename)
 		var version = 1
-		while fm.fileExists(atPath: destURL.path) {
+		while fm.fileExists(atPath: destUrl.path) {
 			let newName = ext.isEmpty ? "\(nameBase) (\(version))" : "\(nameBase) (\(version)).\(ext)"
-			destURL = downloadsDir.appendingPathComponent(newName)
+			destUrl = downloadsDir.appendingPathComponent(newName)
 			version += 1
 		}
 		do {
-			try fm.moveItem(at: tempURL, to: destURL)
-			log("File downloaded: \(destURL.path)")
+			try fm.moveItem(at: tempUrl, to: destUrl)
+			log("File downloaded: \(destUrl.path)")
 			DispatchQueue.main.async { [weak self] in
 				guard let self = self else { return }
-				self.pushDownloadFile(key: key, filename: destURL.lastPathComponent, mimeType: mimeType, uri: destURL.absoluteString, status: "success")
-				self.presentShareSheet(for: destURL)
+				self.pushDownloadFile(key: key, filename: destUrl.lastPathComponent, mimeType: mimeType, uri: destUrl.absoluteString, status: "success")
+				self.presentShareSheet(for: destUrl)
 			}
 		} catch {
 			log("Failed to save downloaded file: \(error.localizedDescription)")
@@ -768,22 +759,22 @@ class WUIEnvironment: NSObject {
 			}
 			let nameBase = (filename as NSString).deletingPathExtension
 			let ext = (filename as NSString).pathExtension
-			var destURL = downloadsDir.appendingPathComponent(filename)
+			var destUrl = downloadsDir.appendingPathComponent(filename)
 			var version = 1
-			while fm.fileExists(atPath: destURL.path) {
+			while fm.fileExists(atPath: destUrl.path) {
 				let newName = ext.isEmpty ? "\(nameBase) (\(version))" : "\(nameBase) (\(version)).\(ext)"
-				destURL = downloadsDir.appendingPathComponent(newName)
+				destUrl = downloadsDir.appendingPathComponent(newName)
 				version += 1
 			}
 			do {
-				try fm.copyItem(at: url, to: destURL)
-				log("File copied to downloads: \(destURL.path)")
-				let size = ((try? fm.attributesOfItem(atPath: destURL.path))?[.size] as? NSNumber)?.int64Value ?? -1
+				try fm.copyItem(at: url, to: destUrl)
+				log("File copied to downloads: \(destUrl.path)")
+				let size = ((try? fm.attributesOfItem(atPath: destUrl.path))?[.size] as? NSNumber)?.int64Value ?? -1
 				pushDownloadProgress(loaded: max(size, 0), total: size)
 				DispatchQueue.main.async { [weak self] in
 					guard let self = self else { return }
-					self.pushDownloadFile(filename: destURL.lastPathComponent, mimeType: mimeType, uri: destURL.absoluteString, status: "success")
-					self.presentShareSheet(for: destURL)
+					self.pushDownloadFile(filename: destUrl.lastPathComponent, mimeType: mimeType, uri: destUrl.absoluteString, status: "success")
+					self.presentShareSheet(for: destUrl)
 				}
 			} catch {
 				log("Failed to copy file to downloads: \(error.localizedDescription)")
@@ -791,11 +782,11 @@ class WUIEnvironment: NSObject {
 			}
 		} else {
 			log("Start background download: \(filename)")
-			startDownloadTask(request: URLRequest(url: url), filename: filename, mimeType: mimeTypeForExtension(url.pathExtension)) { [weak self] tempURL, response in
+			startDownloadTask(request: URLRequest(url: url), filename: filename, mimeType: mimeTypeForExtension(url.pathExtension)) { [weak self] tempUrl, response in
 				guard let self = self else { return }
 				let mimeType = response?.mimeType ?? self.mimeTypeForExtension(url.pathExtension)
 				let suggestedFilename = response?.suggestedFilename ?? filename
-				self.saveDownloadedFile(from: tempURL, filename: suggestedFilename, mimeType: mimeType)
+				self.saveDownloadedFile(from: tempUrl, filename: suggestedFilename, mimeType: mimeType)
 			}
 		}
 	}
@@ -816,13 +807,13 @@ class WUIEnvironment: NSObject {
 
 	private func presentShareSheet(for url: URL) {
 		guard let vc = viewController else { return }
-		let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-		if let popover = activityVC.popoverPresentationController {
+		let activityViewController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+		if let popover = activityViewController.popoverPresentationController {
 			popover.sourceView = vc.view
 			popover.sourceRect = CGRect(x: vc.view.bounds.midX, y: vc.view.bounds.midY, width: 0, height: 0)
 			popover.permittedArrowDirections = []
 		}
-		vc.present(activityVC, animated: true)
+		vc.present(activityViewController, animated: true)
 	}
 }
 
@@ -994,8 +985,8 @@ extension WUIEnvironment: WKNavigationDelegate {
 			if let url = navigationResponse.response.url {
 				let suggestedFilename = navigationResponse.response.suggestedFilename ?? url.lastPathComponent
 				log("Start download (URLSession fallback): \(suggestedFilename)")
-				startDownloadTask(request: URLRequest(url: url), filename: suggestedFilename, mimeType: mimeType) { [weak self] tempURL, _ in
-					self?.saveDownloadedFile(from: tempURL, filename: suggestedFilename, mimeType: mimeType)
+				startDownloadTask(request: URLRequest(url: url), filename: suggestedFilename, mimeType: mimeType) { [weak self] tempUrl, _ in
+					self?.saveDownloadedFile(from: tempUrl, filename: suggestedFilename, mimeType: mimeType)
 				}
 			}
 			decisionHandler(.cancel)
@@ -1036,17 +1027,17 @@ extension WUIEnvironment: WKDownloadDelegate {
 		}
 		let nameBase = (suggestedFilename as NSString).deletingPathExtension
 		let ext = (suggestedFilename as NSString).pathExtension
-		var destURL = downloadsDir.appendingPathComponent(suggestedFilename)
+		var destUrl = downloadsDir.appendingPathComponent(suggestedFilename)
 		var version = 1
-		while fm.fileExists(atPath: destURL.path) {
+		while fm.fileExists(atPath: destUrl.path) {
 			let newName = ext.isEmpty ? "\(nameBase) (\(version))" : "\(nameBase) (\(version)).\(ext)"
-			destURL = downloadsDir.appendingPathComponent(newName)
+			destUrl = downloadsDir.appendingPathComponent(newName)
 			version += 1
 		}
-		log("Download destination: \(destURL.path)")
+		log("Download destination: \(destUrl.path)")
 		let mimeType = response.mimeType ?? "application/octet-stream"
-		downloadDestinations[ObjectIdentifier(download)] = (url: destURL, mimeType: mimeType)
-		completionHandler(destURL)
+		downloadDestinations[ObjectIdentifier(download)] = (url: destUrl, mimeType: mimeType)
+		completionHandler(destUrl)
 	}
 
 	func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
@@ -1121,8 +1112,6 @@ extension WUIEnvironment: CLLocationManagerDelegate {
 		}
 		switch manager.authorizationStatus {
 			case .authorizedWhenInUse, .authorizedAlways:
-				// locationServicesEnabled() is intentionally not checked here to avoid the
-				// main-thread unresponsiveness warning; didFailWithError handles that case.
 				manager.requestLocation()
 			case .denied, .restricted:
 				DispatchQueue.main.async { [weak self] in

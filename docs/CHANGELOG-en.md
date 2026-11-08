@@ -7,6 +7,22 @@
 
 # Change Log
 
+## [v0.7.0] - 2026-11-07
+
+Features:
+
+1. **Web** - Updated the JavaScript library to version `0.7`.
+	- JS code normalized: `typeof` with parentheses and strict comparisons.
+	- The demo page registers its buttons with `addEventListener()` instead of `onclick` attributes.
+2. **Android** - Updated the Java library to version `0.7`.
+	- Java code normalized: `deepLinkURL` → `deepLinkUrl`, `webViewInit()` → `initWebView()`, explicit imports instead of qualified names, concatenation with spaces and no trailing whitespace.
+	- Explanatory comments moved to the Implementation Notes section of the class documentation.
+3. **iOS** - Updated the Swift library to version `0.7`.
+	- Swift code normalized: `deepLinkURL` → `deepLinkUrl`, `webViewInit()` → `initWebView()`, acronyms in camelCase in the own identifiers (`destUrl`, `tempUrl`, `requestUrl`, …) and interpolation instead of concatenation.
+	- Explanatory comments moved to the Implementation Notes section of the class documentation.
+4. **Templates** - Updated the templates to version `0.7` of the library.
+	- Code normalized: `MainActivity.java` and `MainView.swift` without explanatory comments or blank lines inside methods; `tools/sync-templates.sh` with the `#!/usr/bin/env bash` + `set -eu` header.
+
 ## [v0.6.0] - 2026-10-08
 
 Features:

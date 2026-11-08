@@ -6,7 +6,7 @@ Plataformas: [Android](wui-environment-android-es.md) | [iOS](wui-environment-io
 
 # WUIEnvironment (Android)
 
-Versión: `0.6`
+Versión: `0.7`
 
 La librería Java para Android utiliza como motor de renderización **WebView**.
 
@@ -82,6 +82,21 @@ Los eventos son callbacks que el lado nativo envía al JavaScript cuando una acc
 > [!NOTE]
 > Los diálogos son modales (`setCancelable(false)`) — solo se descartan mediante los botones OK/Cancelar. Las etiquetas de los botones son auto-localizadas por el sistema (`android.R.string.ok` / `android.R.string.cancel`).
 
+<a name="android-notes"></a>
+
+## Notas de Implementación
+
+- `requestPermission()`: un rechazo permanente ("no volver a preguntar") devuelve `DENIED` de inmediato a través de
+  `onRequestPermissionsResult`, por lo que la función de retorno se resuelve con `false` sin bloquearse; no hace falta
+  otra heurística.
+- `getDisplayInfo()`: el modo de navegación se lee de `Settings.Secure` `navigation_mode` (`0`: 3 botones, `1`: 2
+  botones, `2`: gestos). En dispositivos sin ese ajuste (algunos Honor/Huawei) se deduce de la altura de la barra de
+  navegación (`gestures_hint`).
+- `getCurrentPosition()`: en Android 11 o superior, si no hay una última ubicación conocida, solicita una ubicación
+  nueva y espera hasta 5 segundos.
+- La línea `package YOUR.PACKAGE.NAME;` de `WUIEnvironment.java` debe reemplazarse por el paquete del proyecto (paso 6
+  de la instalación).
+
 <a name="android-install"></a>
 
 ## Instalación y Configuración
@@ -93,7 +108,7 @@ Los eventos son callbacks que el lado nativo envía al JavaScript cuando una acc
 Clonar el repositorio desde la cuenta oficial de wuiproject en GitHub:
 
 ```bash
-git clone --branch v0.6.0 https://github.com/wui-js/wuijs-environment-lib.git
+git clone --branch v0.7.0 https://github.com/wui-js/wuijs-environment-lib.git
 ```
 
 > [!NOTE]
@@ -255,11 +270,11 @@ package YOUR.PACKAGE.NAME; // Update this to match your project package
 
 <a name="android-config-wui-environment-js"></a>
 
-### 7. Integración de la clase JavaScript `wui-environment-0.6.js`
+### 7. Integración de la clase JavaScript `wui-environment-0.7.js`
 
 Copiar el contenido del directorio `src/wui-js/environment/web/` al directorio `assets/` del proyecto Android. Se recomienda la siguiente estructura:
 
-- `app/src/main/assets/libraries/wui-js/environment/web/wui-environment-0.6.js`
+- `app/src/main/assets/libraries/wui-js/environment/web/wui-environment-0.7.js`
 - `app/src/main/assets/libraries/wui-js/environment/demo/index.html`
 
 Lo anterior asegura que los ejemplos de inicialización funcionen correctamente.

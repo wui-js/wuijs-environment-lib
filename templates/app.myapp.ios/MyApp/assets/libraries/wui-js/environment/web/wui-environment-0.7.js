@@ -1,14 +1,14 @@
 /*
- * @file wui-environment-0.6.js
+ * @file wui-environment-0.7.js
  * @class WUIEnvironment
- * @version 0.6
+ * @version 0.7
  * @author Sergio E. Belmar V. (wuijs.project@gmail.com)
  * @copyright Sergio E. Belmar V. (wuijs.project@gmail.com)
  */
 
 class WUIEnvironment {
 
-	static version = "0.6";
+	static version = "0.7";
 	static #instance = null;
 	static #defaults = {
 		localStorage: true,
@@ -40,8 +40,8 @@ class WUIEnvironment {
 		const code = args.code || null;
 		delete args.event;
 		delete args.code;
-		if (instance != null) {
-			if (code != null && instance.#responses[code] !== undefined) {
+		if (instance !== null) {
+			if (code !== null && instance.#responses[code] !== undefined) {
 				instance.#responses[code] = args.response !== undefined ? args.response : args;
 				return;
 			}
@@ -50,7 +50,7 @@ class WUIEnvironment {
 			switch (event) {
 				case "onDownloadProgress":
 					callback = instance.#getDownloadCallback(key, "onProgress", instance.#onDownloadProgress);
-					if (typeof callback === "function") {
+					if (typeof (callback) === "function") {
 						callback({ key: key, loaded: args.loaded, total: args.total });
 					}
 					break;
@@ -59,12 +59,12 @@ class WUIEnvironment {
 					if (key !== null) {
 						instance.#downloads.delete(key);
 					}
-					if (typeof callback === "function") {
+					if (typeof (callback) === "function") {
 						callback(Object.assign(args, { key: key }));
 					}
 					break;
 				case "onReceiveDeepLink":
-					if (typeof instance.#onReceiveDeepLink === "function") {
+					if (typeof (instance.#onReceiveDeepLink) === "function") {
 						instance.#onReceiveDeepLink(args.url || "");
 					}
 					break;
@@ -85,8 +85,8 @@ class WUIEnvironment {
 			: this.#platform.includes("linux") ? "Linux"
 			: "unknown";
 		this.#environment =
-			this.#userAgent.match(/WUIEnvironment/i) && this.#userAgent.match(/android/i) && typeof (Android) != "undefined" ? ("local.android"
-			) : this.#userAgent.match(/WUIEnvironment/i) && this.#userAgent.match(/iphone|ipad/i) && typeof (webkit) != "undefined" && typeof (webkit.messageHandlers) != "undefined" ? ("local.ios"
+			this.#userAgent.match(/WUIEnvironment/i) && this.#userAgent.match(/android/i) && typeof (Android) !== "undefined" ? ("local.android"
+			) : this.#userAgent.match(/WUIEnvironment/i) && this.#userAgent.match(/iphone|ipad/i) && typeof (webkit) !== "undefined" && typeof (webkit.messageHandlers) !== "undefined" ? ("local.ios"
 			) : ("web");
 		Object.entries(defaults).forEach(([name, value]) => {
 			this[name] = name in properties ? properties[name] : value;
@@ -131,13 +131,13 @@ class WUIEnvironment {
 	}
 
 	set localStorage(value) {
-		if (typeof value === "boolean") {
+		if (typeof (value) === "boolean") {
 			this.#localStorage = value;
 		}
 	}
 
 	set onReady(value) {
-		if (typeof value === "function") {
+		if (typeof (value) === "function") {
 			this.#onReady = value;
 			if (this.#reqCount === this.#resCount && this.#reqCount > 0) {
 				this.#onReady(this.#reqCount);
@@ -146,19 +146,19 @@ class WUIEnvironment {
 	}
 
 	set onDownloadProgress(value) {
-		if (typeof value === "function" || value === null) {
+		if (typeof (value) === "function" || value === null) {
 			this.#onDownloadProgress = value;
 		}
 	}
 
 	set onDownloadFile(value) {
-		if (typeof value === "function") {
+		if (typeof (value) === "function") {
 			this.#onDownloadFile = value;
 		}
 	}
 
 	set onReceiveDeepLink(value) {
-		if (typeof value === "function") {
+		if (typeof (value) === "function") {
 			this.#onReceiveDeepLink = value;
 		}
 	}
@@ -174,7 +174,7 @@ class WUIEnvironment {
 					resolve(response);
 				}
 				this.#resCount++;
-				if (this.#reqCount === this.#resCount && typeof this.#onReady === "function") {
+				if (this.#reqCount === this.#resCount && typeof (this.#onReady) === "function") {
 					this.#onReady(this.#reqCount);
 				}
 			} else if (this.#environment === "local.ios") {
@@ -188,11 +188,11 @@ class WUIEnvironment {
 						let response = this.#responses[code];
 						delete this.#responses[code];
 						this.#resCount++;
-						if (options.func === "readFile" && options.name && options.name.match(/\.json$/i) && typeof response === "string") {
+						if (options.func === "readFile" && options.name && options.name.match(/\.json$/i) && typeof (response) === "string") {
 							try { response = JSON.parse(response || "{}"); } catch (e) { }
 						}
 						resolve(response);
-						if (this.#reqCount === this.#resCount && typeof this.#onReady === "function") {
+						if (this.#reqCount === this.#resCount && typeof (this.#onReady) === "function") {
 							this.#onReady(this.#reqCount);
 						}
 					}
@@ -347,7 +347,7 @@ class WUIEnvironment {
 	getConnectionStatus(done) {
 		if (this.isLocal()) {
 			return this.#request({ func: "getConnectionStatus" }).then(done);
-		} else if (typeof (navigator.onLine) != "undefined") {
+		} else if (typeof (navigator.onLine) !== "undefined") {
 			if (typeof (done) === "function") {
 				done(navigator.onLine);
 			}
@@ -369,12 +369,12 @@ class WUIEnvironment {
 	}
 
 	setAppBadge(number, done) {
-		const n = (typeof number === "number" && number > 0) ? Math.floor(number) : 0;
+		const n = (typeof (number) === "number" && number > 0) ? Math.floor(number) : 0;
 		if (this.isLocal()) {
 			return this.#request({ func: "setAppBadge", number: n }).then(done);
-		} else if (n > 0 && typeof navigator.setAppBadge === "function") {
+		} else if (n > 0 && typeof (navigator.setAppBadge) === "function") {
 			return navigator.setAppBadge(n).then(done);
-		} else if (typeof navigator.clearAppBadge === "function") {
+		} else if (typeof (navigator.clearAppBadge) === "function") {
 			return navigator.clearAppBadge().then(done);
 		}
 		return null;
@@ -464,19 +464,19 @@ class WUIEnvironment {
 	}
 
 	#getDownloadKey() {
-		return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? crypto.randomUUID() : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+		return typeof (crypto) !== "undefined" && typeof (crypto.randomUUID) === "function" ? crypto.randomUUID() : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
 	}
 
 	#getDownloadCallback(key, name, fallback) {
 		const download = key !== null ? this.#downloads.get(key) : undefined;
-		return download !== undefined && typeof download[name] === "function" ? download[name] : fallback;
+		return download !== undefined && typeof (download[name]) === "function" ? download[name] : fallback;
 	}
 
 	downloadFile(url, filename = "", headers = {}, options = {}) {
-		const done = typeof options === "function" ? options : null;
+		const done = typeof (options) === "function" ? options : null;
 		if (this.isLocal()) {
 			const key = this.#getDownloadKey();
-			if (typeof options === "object" && options !== null && (typeof options.onProgress === "function" || typeof options.onFile === "function")) {
+			if (typeof (options) === "object" && options !== null && (typeof (options.onProgress) === "function" || typeof (options.onFile) === "function")) {
 				this.#downloads.set(key, { onProgress: options.onProgress, onFile: options.onFile });
 			}
 			this.#request({ func: "downloadFile", url: url, filename: filename, headers: headers, key: key }).then(done);
@@ -486,7 +486,7 @@ class WUIEnvironment {
 	}
 
 	cancelDownload(key, done) {
-		if (typeof key === "function") {
+		if (typeof (key) === "function") {
 			done = key;
 			key = null;
 		}
@@ -498,7 +498,7 @@ class WUIEnvironment {
 	log(message, force = false) {
 		if (this.isLocal()) {
 			this.#request({ func: "log", message: String(message), force: Boolean(force) });
-		} else if (typeof console !== "undefined" && typeof console.log === "function") {
+		} else if (typeof (console) !== "undefined" && typeof (console.log) === "function") {
 			console.log(message);
 		}
 	}
